@@ -15,24 +15,24 @@ Ork also requires the following external libraries:
 INSTALLATION
 ------------------------------------------------------------------------------
 
-Ork comes with two project files, one for Code::Blocks (either on Windows or
-Linux), the other for Microsoft Visual C++ 2010. Each project has four targets
-to build:
-- the Ork library in debug mode
-- the Ork library in release mode
-- unit tests for Ork
-- examples using Ork
+Ork is built by the following
+  mkdir build
+  cd build
+  cmake ..
+  make
+  sudo make install (if you want to install the library - not needed for just
+  running the examples)
 
-For the Code::Blocks project you need to define the following global compiler
-variables:
-- glut (base) : either glut32 or freeglut 
-- glut (cflags) : either USE_GLUT or USE_FREEGLUT
-- glew : the path to the glew DLL, e.g. C:\Progra~1\glew\glew32.dll
-
+From the original Ork 3.1:
 The USE_SHARED_PTR preprocessor flag can be set to use std::tr1::shared_ptr
 (needs a compiler providing support for this). Otherwise smart pointers use
 an Ork specific implementation (potentially more efficient since based on
 intrusive counters).
+
+Update:
+It is strongly advised to use shared ptrs and not Orks internal smart pointers.
+Current branch is untested with orks own smart pointers and there were signs of
+bugs and memory leaks when using these.
 
 
 UNIT TESTS
