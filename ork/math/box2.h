@@ -48,6 +48,10 @@
 #include "pmath.h"
 #include "ork/math/vec2.h"
 
+//Lars edit
+using std::max;
+using std::min;
+
 namespace ork
 {
 

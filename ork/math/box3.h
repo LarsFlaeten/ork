@@ -47,6 +47,10 @@
 
 #include "ork/math/vec3.h"
 
+// Lars edit
+using std::min;
+using std::max;
+
 namespace ork
 {
 
