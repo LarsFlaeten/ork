@@ -1,0 +1,10 @@
+prefix=@CMAKE_INSTALL_PREFIX@
+libdir=${prefix}/@LIB_INSTALL_DIR@
+includedir=${prefix}/include
+
+Name: ork
+Description: OpenGL Rendering Kernel
+Version: @ORK_VERSION@
+Requires:
+Libs: -L${libdir} -lork
+Cflags: -I${includedir} @ORK_CFLAGS@
