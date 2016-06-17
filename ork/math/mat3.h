@@ -1,24 +1,42 @@
 /*
  * Ork: a small object-oriented OpenGL Rendering Kernel.
- * Copyright (c) 2008-2010 INRIA
+ * Website : http://ork.gforge.inria.fr/
+ * Copyright (c) 2008-2015 INRIA - LJK (CNRS - Grenoble University)
+ * All rights reserved.
+ * Redistribution and use in source and binary forms, with or without 
+ * modification, are permitted provided that the following conditions are met:
+ * 
+ * 1. Redistributions of source code must retain the above copyright notice, 
+ * this list of conditions and the following disclaimer.
+ * 
+ * 2. Redistributions in binary form must reproduce the above copyright notice, 
+ * this list of conditions and the following disclaimer in the documentation 
+ * and/or other materials provided with the distribution.
+ * 
+ * 3. Neither the name of the copyright holder nor the names of its contributors 
+ * may be used to endorse or promote products derived from this software without 
+ * specific prior written permission.
+ * 
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
+ * ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED 
+ * WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. 
+ * IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, 
+ * INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, 
+ * BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, 
+ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF 
+ * LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE 
+ * OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED 
+ * OF THE POSSIBILITY OF SUCH DAMAGE.
  *
- * This library is free software; you can redistribute it and/or modify it
- * under the terms of the GNU Lesser General Public License as published by
- * the Free Software Foundation; either version 3 of the License, or (at
- * your option) any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License
- * for more details.
- *
- * You should have received a copy of the GNU Lesser General Public License
- * along with this library; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301 USA.
  */
-
 /*
- * Authors: Eric Bruneton, Antoine Begault, Guillaume Piolat.
+ * Ork is distributed under the BSD3 Licence. 
+ * For any assistance, feedback and remarks, you can check out the 
+ * mailing list on the project page : 
+ * http://ork.gforge.inria.fr/
+ */
+/*
+ * Main authors: Eric Bruneton, Antoine Begault, Guillaume Piolat.
  */
 
 #ifndef _ORK_MAT3_H_
@@ -42,8 +60,7 @@ protected:
     /**
      * The matrix coeffients
      */
-    union
-    {
+    union {
         /**
          * The matrix coefficients as a 2D array.
          */
@@ -93,7 +110,12 @@ public:
     /**
      * Returns the row of this matrix whose index is given.
      */
-    type* operator[](int iRow) const;
+    const type* operator[](int iRow) const;
+
+    /**
+     * Returns the row of this matrix whose index is given (read-write).
+     */
+    type* operator[](int iRow);
 
     /**
      * Returns the column of this matrix whose index is given.
@@ -201,9 +223,9 @@ public:
     mat3<t> cast() const
     {
         return mat3<t>((t) m[0][0], (t) m[0][1], (t) m[0][2],
-                       (t) m[1][0], (t)m[1][1], (t) m[1][2],
-                       (t) m[2][0], (t)m[2][1], (t) m[2][2]
-                      );
+            (t) m[1][0], (t)m[1][1], (t) m[1][2],
+            (t) m[2][0], (t)m[2][1], (t) m[2][2]
+        );
     }
 
     /**
@@ -236,8 +258,8 @@ inline mat3<type>::mat3()
 
 template <typename type>
 inline mat3<type>::mat3(type m00, type m01, type m02,
-                        type m10, type m11, type m12,
-                        type m20, type m21, type m22)
+    type m10, type m11, type m12,
+    type m20, type m21, type m22)
 {
     m[0][0] = m00;
     m[0][1] = m01;
@@ -275,9 +297,15 @@ inline const type* mat3<type>::coefficients() const
 }
 
 template <typename type>
-inline type* mat3<type>::operator[](int iRow) const
+inline const type* mat3<type>::operator[](int iRow) const
 {
-    return (type*)m[iRow];
+    return m[iRow];
+}
+
+template <typename type>
+inline type* mat3<type>::operator[](int iRow)
+{
+    return m[iRow];
 }
 
 template <typename type>
@@ -314,12 +342,9 @@ inline mat3<type>& mat3<type>::operator=(const mat3<type>& mat)
 template <typename type>
 bool mat3<type>::operator==(const mat3<type>& mat) const
 {
-    for (int iRow = 0; iRow < 3; iRow++)
-    {
-        for (int iCol = 0; iCol < 3; iCol++)
-        {
-            if (m[iRow][iCol] != mat.m[iRow][iCol])
-            {
+    for (int iRow = 0; iRow < 3; iRow++) {
+        for (int iCol = 0; iCol < 3; iCol++) {
+            if (m[iRow][iCol] != mat.m[iRow][iCol]) {
                 return false;
             }
         }
@@ -337,10 +362,8 @@ template <typename type>
 mat3<type> mat3<type>::operator+(const mat3<type>& mat) const
 {
     mat3<type> kSum;
-    for (int iRow = 0; iRow < 3; iRow++)
-    {
-        for (int iCol = 0; iCol < 3; iCol++)
-        {
+    for (int iRow = 0; iRow < 3; iRow++) {
+        for (int iCol = 0; iCol < 3; iCol++) {
             kSum.m[iRow][iCol] = m[iRow][iCol] + mat.m[iRow][iCol];
         }
     }
@@ -351,10 +374,8 @@ template <typename type>
 mat3<type> mat3<type>::operator-(const mat3<type>& mat) const
 {
     mat3<type> kDiff;
-    for (int iRow = 0; iRow < 3; iRow++)
-    {
-        for (int iCol = 0; iCol < 3; iCol++)
-        {
+    for (int iRow = 0; iRow < 3; iRow++) {
+        for (int iCol = 0; iCol < 3; iCol++) {
             kDiff.m[iRow][iCol] = m[iRow][iCol] - mat.m[iRow][iCol];
         }
     }
@@ -365,10 +386,8 @@ template <typename type>
 mat3<type> mat3<type>::operator*(const mat3<type>& mat) const
 {
     mat3<type> kProd;
-    for (int iRow = 0; iRow < 3; iRow++)
-    {
-        for (int iCol = 0; iCol < 3; iCol++)
-        {
+    for (int iRow = 0; iRow < 3; iRow++) {
+        for (int iCol = 0; iCol < 3; iCol++) {
             kProd.m[iRow][iCol] =
                 m[iRow][0] * mat.m[0][iCol] +
                 m[iRow][1] * mat.m[1][iCol] +
@@ -382,8 +401,7 @@ template <typename type>
 vec3<type> mat3<type>::operator*(const vec3<type>& v) const
 {
     vec3<type> kProd;
-    for (int iRow = 0; iRow < 3; iRow++)
-    {
+    for (int iRow = 0; iRow < 3; iRow++) {
         kProd[iRow] =
             m[iRow][0] * v[0] +
             m[iRow][1] * v[1] +
@@ -418,10 +436,8 @@ template <typename type>
 mat3<type> mat3<type>::operator*(type fScalar) const
 {
     mat3<type> kProd;
-    for (int iRow = 0; iRow < 3; iRow++)
-    {
-        for (int iCol = 0; iCol < 3; iCol++)
-        {
+    for (int iRow = 0; iRow < 3; iRow++) {
+        for (int iCol = 0; iCol < 3; iCol++) {
             kProd[iRow][iCol] = fScalar * m[iRow][iCol];
         }
     }
@@ -432,10 +448,8 @@ template <typename type>
 mat3<type> mat3<type>::operator-() const
 {
     mat3<type> kNeg;
-    for (int iRow = 0; iRow < 3; iRow++)
-    {
-        for (int iCol = 0; iCol < 3; iCol++)
-        {
+    for (int iRow = 0; iRow < 3; iRow++) {
+        for (int iCol = 0; iCol < 3; iCol++) {
             kNeg[iRow][iCol] = -m[iRow][iCol];
         }
     }
@@ -446,10 +460,8 @@ template <typename type>
 mat3<type> mat3<type>::transpose() const
 {
     mat3<type> kTranspose;
-    for (int iRow = 0; iRow < 3; iRow++)
-    {
-        for (int iCol = 0; iCol < 3; iCol++)
-        {
+    for (int iRow = 0; iRow < 3; iRow++) {
+        for (int iCol = 0; iCol < 3; iCol++) {
             kTranspose[iRow][iCol] = m[iCol][iRow];
         }
     }
@@ -474,13 +486,11 @@ bool mat3<type>::inverse(mat3<type>& mInv, type tolerance) const
         m[0][0] * mInv[0][0] +
         m[0][1] * mInv[1][0] +
         m[0][2] * mInv[2][0];
-    if (abs(fDet) <= tolerance)
-    {
+    if (abs(fDet) <= tolerance) {
         return false;
     }
     type fInvDet = 1.0 / fDet;
-    for (int iRow = 0; iRow < 3; iRow++)
-    {
+    for (int iRow = 0; iRow < 3; iRow++) {
         for (int iCol = 0; iCol < 3; iCol++)
             mInv[iRow][iCol] *= fInvDet;
     }
@@ -511,7 +521,7 @@ type mat3<type>::determinant() const
 template <typename type>
 type mat3<type>::trace() const
 {
-    return m[0][0] + m[1][1] + m[2][2];
+   return m[0][0] + m[1][1] + m[2][2];
 }
 
 template <typename type>
@@ -524,6 +534,15 @@ const mat3<type> mat3<type>::IDENTITY(1, 0, 0,
                                       0, 1, 0,
                                       0, 0, 1);
 
+}
+
+/**
+ * Returns the product of this matrix and of the given scalar.
+ */
+template <typename scalarType, typename matType>
+inline ork::mat3<matType> operator*(const scalarType scalar, const ork::mat3<matType> &m)
+{
+  return m * static_cast<matType>(scalar);
 }
 
 #endif

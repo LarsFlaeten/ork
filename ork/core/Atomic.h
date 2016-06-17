@@ -1,28 +1,50 @@
 /*
  * Ork: a small object-oriented OpenGL Rendering Kernel.
- * Copyright (c) 2008-2010 INRIA
+ * Website : http://ork.gforge.inria.fr/
+ * Copyright (c) 2008-2015 INRIA - LJK (CNRS - Grenoble University)
+ * All rights reserved.
+ * Redistribution and use in source and binary forms, with or without 
+ * modification, are permitted provided that the following conditions are met:
+ * 
+ * 1. Redistributions of source code must retain the above copyright notice, 
+ * this list of conditions and the following disclaimer.
+ * 
+ * 2. Redistributions in binary form must reproduce the above copyright notice, 
+ * this list of conditions and the following disclaimer in the documentation 
+ * and/or other materials provided with the distribution.
+ * 
+ * 3. Neither the name of the copyright holder nor the names of its contributors 
+ * may be used to endorse or promote products derived from this software without 
+ * specific prior written permission.
+ * 
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
+ * ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED 
+ * WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. 
+ * IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, 
+ * INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, 
+ * BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, 
+ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF 
+ * LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE 
+ * OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED 
+ * OF THE POSSIBILITY OF SUCH DAMAGE.
  *
- * This library is free software; you can redistribute it and/or modify it
- * under the terms of the GNU Lesser General Public License as published by
- * the Free Software Foundation; either version 3 of the License, or (at
- * your option) any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License
- * for more details.
- *
- * You should have received a copy of the GNU Lesser General Public License
- * along with this library; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301 USA.
  */
-
 /*
- * Authors: Eric Bruneton, Antoine Begault, Guillaume Piolat.
+ * Ork is distributed under the BSD3 Licence. 
+ * For any assistance, feedback and remarks, you can check out the 
+ * mailing list on the project page : 
+ * http://ork.gforge.inria.fr/
+ */
+/*
+ * Main authors: Eric Bruneton, Antoine Begault, Guillaume Piolat.
  */
 
 #ifndef _ATOMIC_H_
 #define _ATOMIC_H_
+
+#if defined(_MSC_VER) // MSVC
+#include <intrin.h>
+#endif
 
 namespace ork
 {
@@ -71,79 +93,14 @@ static FORCE_INLINE int atomic_decrement(int volatile * pw)
 
 #elif defined(_MSC_VER) // MSVC
 
-// the intrinsics don't work in release mode, so there is asm
-
-inline __declspec(naked) int __fastcall atomic_exchange_and_add(int volatile * pw, int dv)
-{
-    //return _InterlockedExchangeAdd(pw, dv);
-    __asm
-    {
-        lock xadd dword ptr [ecx], edx
-        mov eax, edx
-        ret
-    }
-}
-
-inline __declspec(naked) void __fastcall atomic_increment(int volatile * pw)
-{
-    //return _InterlockedExchangeAdd(pw, -1);
-    __asm
-    {
-        mov eax, 1
-        lock xadd dword ptr [ecx], eax
-        ret
-    }
-}
-
-inline __declspec(naked) int __fastcall atomic_decrement(int volatile * pw)
-{
-    //    return _InterlockedDecrement(reinterpret_cast<volatile long* >(pw));
-    __asm
-    {
-        mov eax, 0xffffffff
-        lock xadd dword ptr [ecx], eax
-        ret
-    }
-}
-
+#define atomic_exchange_and_add(pw,dv) _InterlockedExchangeAdd((volatile long*)(pw),(dv))
+#define atomic_increment(pw) (_InterlockedIncrement((volatile long*)(pw)))
+#define atomic_decrement(pw) (_InterlockedDecrement((volatile long*)(pw))+1)
 #elif defined(__GNUC__) // GCC
 
-/*
-#define atomic_exchange_and_add(a,b) __gnu_cxx::__exchange_and_add((a),(b))
-#define atomic_increment(a) __gnu_cxx::__atomic_add((a),1)
-#define atomic_decrement(a) __gnu_cxx::__exchange_and_add((a),-1)
-*/
-
-static inline int atomic_exchange_and_add(int volatile *pw, int dv)
-{
-    int r;
-    __asm__ __volatile__
-    (
-        "lock\n\t"
-        "xadd %1, %0":
-        "=m"( *pw ), "=r"( r ): // outputs (%0, %1)
-        "m"( *pw ), "1"( dv ): // inputs (%2, %3 == %1)
-        "memory", "cc" // clobbers
-    );
-    return r;
-}
-
-static inline void atomic_increment(int volatile *pw)
-{
-    __asm__ __volatile__
-    (
-        "lock\n\t"
-        "incl %0":
-        "=m"( *pw ): // output (%0)
-        "m"( *pw ): // input (%1)
-        "cc" // clobbers
-    );
-}
-
-static inline int atomic_decrement(int volatile *pw)
-{
-    return atomic_exchange_and_add(pw, -1);
-}
+#define atomic_exchange_and_add(pw,dv) __sync_fetch_and_add((volatile long*)(pw), dv)
+#define atomic_increment(pw) __sync_fetch_and_add((volatile long*)(pw), 1)
+#define atomic_decrement(pw) __sync_fetch_and_sub((volatile long*)(pw), 1)
 
 #else
 

@@ -1,24 +1,42 @@
 /*
  * Ork: a small object-oriented OpenGL Rendering Kernel.
- * Copyright (c) 2008-2010 INRIA
+ * Website : http://ork.gforge.inria.fr/
+ * Copyright (c) 2008-2015 INRIA - LJK (CNRS - Grenoble University)
+ * All rights reserved.
+ * Redistribution and use in source and binary forms, with or without 
+ * modification, are permitted provided that the following conditions are met:
+ * 
+ * 1. Redistributions of source code must retain the above copyright notice, 
+ * this list of conditions and the following disclaimer.
+ * 
+ * 2. Redistributions in binary form must reproduce the above copyright notice, 
+ * this list of conditions and the following disclaimer in the documentation 
+ * and/or other materials provided with the distribution.
+ * 
+ * 3. Neither the name of the copyright holder nor the names of its contributors 
+ * may be used to endorse or promote products derived from this software without 
+ * specific prior written permission.
+ * 
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
+ * ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED 
+ * WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. 
+ * IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, 
+ * INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, 
+ * BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, 
+ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF 
+ * LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE 
+ * OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED 
+ * OF THE POSSIBILITY OF SUCH DAMAGE.
  *
- * This library is free software; you can redistribute it and/or modify it
- * under the terms of the GNU Lesser General Public License as published by
- * the Free Software Foundation; either version 3 of the License, or (at
- * your option) any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License
- * for more details.
- *
- * You should have received a copy of the GNU Lesser General Public License
- * along with this library; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301 USA.
  */
-
 /*
- * Authors: Eric Bruneton, Antoine Begault, Guillaume Piolat.
+ * Ork is distributed under the BSD3 Licence. 
+ * For any assistance, feedback and remarks, you can check out the 
+ * mailing list on the project page : 
+ * http://ork.gforge.inria.fr/
+ */
+/*
+ * Main authors: Eric Bruneton, Antoine Begault, Guillaume Piolat.
  */
 
 #include "ork/render/GPUBuffer.h"
@@ -29,6 +47,8 @@
 
 #include "ork/core/Logger.h"
 #include "ork/render/FrameBuffer.h"
+
+using namespace std;
 
 // glMapBuffer and glUnmapBuffer seem inefficient.
 // This option avoids theses calls by using a copy of
@@ -116,7 +136,7 @@ public:
         }
     }
 
-    int findFreeUnit(int programId)
+    int findFreeUnit(const vector<GLuint> &programIds)
     {
         for (GLuint i = 0; i < maxUnits; ++i) {
             if (units[i]->isFree()) {
@@ -129,7 +149,7 @@ public:
 
         for (GLuint i = 0; i < maxUnits; ++i) {
             const GPUBuffer *buffer = units[i]->getCurrentBufferBinding();
-            if (!buffer->isUsedBy(programId)) {
+            if (!buffer->isUsedBy(programIds)) {
                 unsigned int bindingTime = units[i]->getLastBindingTime();
                 if (bestUnit == -1 || bindingTime < oldestBindingTime) {
                     bestUnit = i;
@@ -199,7 +219,7 @@ GLuint UniformBufferManager::maxUnits = 0;
 
 static UniformBufferManager* UNIFORM_BUFFER_MANAGER = NULL;
 
-GPUBuffer::GPUBuffer() : size(0), mappedData(NULL), cpuData(NULL), currentUniformUnit(-1)
+GPUBuffer::GPUBuffer() : size(0), mappedData(NULL), cpuData(NULL), isDirty(false), currentUniformUnit(-1)
 {
     if (UNIFORM_BUFFER_MANAGER == NULL) {
         UNIFORM_BUFFER_MANAGER = new UniformBufferManager();
@@ -250,11 +270,12 @@ void GPUBuffer::setData(int size, const void *data, BufferUsage u)
         if (data != NULL) {
             memcpy(cpuData, (unsigned char*) data, size);
         }
+        isDirty = false;
     }
 #endif
 }
 
-void GPUBuffer::setSubData(int target, int offset, int size, const void *data)
+void GPUBuffer::setSubData(int offset, int size, const void *data)
 {
     assert(mappedData == NULL);
     glBindBuffer(GL_COPY_WRITE_BUFFER, bufferId);
@@ -267,7 +288,7 @@ void GPUBuffer::setSubData(int target, int offset, int size, const void *data)
     }
 }
 
-void GPUBuffer::getSubData(int target, int offset, int size, void *data)
+void GPUBuffer::getSubData(int offset, int size, void *data)
 {
     assert(mappedData == NULL);
     glBindBuffer(GL_COPY_READ_BUFFER, bufferId);
@@ -281,6 +302,12 @@ volatile void *GPUBuffer::map(BufferAccess a)
     assert(mappedData == NULL);
 
     if (cpuData != NULL) {
+        if (isDirty) {
+            glBindBuffer(GL_COPY_READ_BUFFER, bufferId);
+            glGetBufferSubData(GL_COPY_READ_BUFFER, 0, size, cpuData);
+            glBindBuffer(GL_COPY_READ_BUFFER, 0);
+            isDirty = false;
+        }
         mappedData = cpuData;
     } else {
         glBindBuffer(GL_COPY_READ_BUFFER, bufferId);
@@ -333,9 +360,14 @@ void GPUBuffer::unbind(int target) const
     assert(FrameBuffer::getError() == GL_NO_ERROR);
 }
 
+void GPUBuffer::dirty() const
+{
+    isDirty = true;
+}
+
 void GPUBuffer::addUser(GLuint programId) const
 {
-    assert(!isUsedBy(programId));
+    assert(find(programIds.begin(), programIds.end(), programId) == programIds.end());
     programIds.push_back(programId);
 }
 
@@ -346,22 +378,19 @@ void GPUBuffer::removeUser(GLuint programId) const
     programIds.erase(i);
 }
 
-bool GPUBuffer::isUsedBy(GLuint programId) const
+bool GPUBuffer::isUsedBy(const vector<GLuint> &programId) const
 {
-    return find(programIds.begin(), programIds.end(), programId) != programIds.end();
+    return find_first_of(programIds.begin(), programIds.end(), programId.begin(), programId.end()) != programIds.end();
 }
 
-GLint GPUBuffer::bindToUniformBufferUnit(int programId) const
+GLint GPUBuffer::bindToUniformBufferUnit(const vector<GLuint> &programIds) const
 {
-    assert(programId != 0);
-
     GLint unit = currentUniformUnit;
     if (unit == -1) {
-        unit = UNIFORM_BUFFER_MANAGER->findFreeUnit(programId);
+        unit = UNIFORM_BUFFER_MANAGER->findFreeUnit(programIds);
+        assert(unit >= 0);
     }
-
     UNIFORM_BUFFER_MANAGER->bind(GLuint(unit), this);
-
     return unit;
 }
 

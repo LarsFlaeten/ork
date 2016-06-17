@@ -373,7 +373,7 @@ void Module::printLog(int shaderId, int nlines, const char** lines, bool error)
 {
     GLint logLength;
     glGetShaderiv(shaderId, GL_INFO_LOG_LENGTH, &logLength);
-    Logger* logger = error ? Logger::ERROR_LOGGER.get() : Logger::WARNING_LOGGER.get();
+    ptr<Logger> logger = error ? Logger::ERROR_LOGGER : Logger::WARNING_LOGGER;
     if (logger != NULL && logLength > 1) {
         ostringstream msg;
         int l = 1;

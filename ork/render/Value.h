@@ -1,24 +1,42 @@
 /*
  * Ork: a small object-oriented OpenGL Rendering Kernel.
- * Copyright (c) 2008-2010 INRIA
+ * Website : http://ork.gforge.inria.fr/
+ * Copyright (c) 2008-2015 INRIA - LJK (CNRS - Grenoble University)
+ * All rights reserved.
+ * Redistribution and use in source and binary forms, with or without 
+ * modification, are permitted provided that the following conditions are met:
+ * 
+ * 1. Redistributions of source code must retain the above copyright notice, 
+ * this list of conditions and the following disclaimer.
+ * 
+ * 2. Redistributions in binary form must reproduce the above copyright notice, 
+ * this list of conditions and the following disclaimer in the documentation 
+ * and/or other materials provided with the distribution.
+ * 
+ * 3. Neither the name of the copyright holder nor the names of its contributors 
+ * may be used to endorse or promote products derived from this software without 
+ * specific prior written permission.
+ * 
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
+ * ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED 
+ * WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. 
+ * IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, 
+ * INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, 
+ * BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, 
+ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF 
+ * LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE 
+ * OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED 
+ * OF THE POSSIBILITY OF SUCH DAMAGE.
  *
- * This library is free software; you can redistribute it and/or modify it
- * under the terms of the GNU Lesser General Public License as published by
- * the Free Software Foundation; either version 3 of the License, or (at
- * your option) any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License
- * for more details.
- *
- * You should have received a copy of the GNU Lesser General Public License
- * along with this library; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301 USA.
  */
-
 /*
- * Authors: Eric Bruneton, Antoine Begault, Guillaume Piolat.
+ * Ork is distributed under the BSD3 Licence. 
+ * For any assistance, feedback and remarks, you can check out the 
+ * mailing list on the project page : 
+ * http://ork.gforge.inria.fr/
+ */
+/*
+ * Main authors: Eric Bruneton, Antoine Begault, Guillaume Piolat.
  */
 
 #ifndef _ORK_VALUE_H_
@@ -33,8 +51,6 @@
 #include "ork/math/mat4.h"
 #include "ork/render/Texture.h"
 #include "ork/render/GPUBuffer.h"
-
-using namespace std;
 
 namespace ork
 {
@@ -59,18 +75,18 @@ public:
     /**
      * Returns the name of this value.
      */
-    string getName() const;
+    std::string getName() const;
 
 protected:
     /**
      * The name of this value.
      */
-    string name;
+    std::string name;
 
     /**
      * Creates an uninitialized value.
      */
-    Value(const char *type, const string &name);
+    Value(const char *type, const std::string &name);
 };
 
 // ----------------------------------------------------------------------------
@@ -86,14 +102,14 @@ public:
     /**
      * Creates an uninitialized Value1.
      */
-    Value1(const string &name) : Value(V, name)
+    Value1(const std::string &name) : Value(V, name)
     {
     }
 
     /**
      * Creates a Value1.
      */
-    Value1(const string &name, T value) : Value(V, name), value(value)
+    Value1(const std::string &name, T value) : Value(V, name), value(value)
     {
     }
 
@@ -187,14 +203,14 @@ public:
     /**
      * Creates an uninitialized Value2.
      */
-    Value2(const string &name) : Value(V, name)
+    Value2(const std::string &name) : Value(V, name)
     {
     }
 
     /**
      * Creates a Value2.
      */
-    Value2(const string &name, const vec2<T> &value) : Value(V, name), value(value)
+    Value2(const std::string &name, const vec2<T> &value) : Value(V, name), value(value)
     {
     }
 
@@ -288,14 +304,14 @@ public:
     /**
      * Creates an uninitialized Value3.
      */
-    Value3(const string &name) : Value(V, name)
+    Value3(const std::string &name) : Value(V, name)
     {
     }
 
     /**
      * Creates a Value3.
      */
-    Value3(const string &name, const vec3<T> &value) : Value(V, name), value(value)
+    Value3(const std::string &name, const vec3<T> &value) : Value(V, name), value(value)
     {
     }
 
@@ -389,14 +405,14 @@ public:
     /**
      * Creates an uninitialized Value4.
      */
-    Value4(const string &name) : Value(V, name)
+    Value4(const std::string &name) : Value(V, name)
     {
     }
 
     /**
      * Creates a Value4.
      */
-    Value4(const string &name, const vec4<T> &value) : Value(V, name), value(value)
+    Value4(const std::string &name, const vec4<T> &value) : Value(V, name), value(value)
     {
     }
 
@@ -490,14 +506,14 @@ public:
     /**
      * Creates an uninitialized ValueMatrix.
      */
-    ValueMatrix(const string &name) : Value(V, name)
+    ValueMatrix(const std::string &name) : Value(V, name)
     {
     }
 
     /**
      * Creates a ValueMatrix.
      */
-    ValueMatrix(const string &name, const T* value) : Value(V, name)
+    ValueMatrix(const std::string &name, const T* value) : Value(V, name)
     {
         set(value);
     }
@@ -557,14 +573,14 @@ public:
     /**
      * Creates an uninitialized ValueMatrix3.
      */
-    ValueMatrix3(const string &name) : ValueMatrix<U, T, 3, 3, V>(name)
+    ValueMatrix3(const std::string &name) : ValueMatrix<U, T, 3, 3, V>(name)
     {
     }
 
     /**
      * Creates a ValueMatrix3.
      */
-    ValueMatrix3(const string &name, const mat3<T> &value) : ValueMatrix<U, T, 3, 3, V>(name)
+    ValueMatrix3(const std::string &name, const mat3<T> &value) : ValueMatrix<U, T, 3, 3, V>(name)
     {
         setMatrix(value);
     }
@@ -599,14 +615,14 @@ public:
     /**
      * Creates an uninitialized ValueMatrix4.
      */
-    ValueMatrix4(const string &name) : ValueMatrix<U, T, 4, 4, V>(name)
+    ValueMatrix4(const std::string &name) : ValueMatrix<U, T, 4, 4, V>(name)
     {
     }
 
     /**
      * Creates a ValueMatrix4.
      */
-    ValueMatrix4(const string &name, const mat4<T> &value) : ValueMatrix<U, T, 4, 4, V>(name)
+    ValueMatrix4(const std::string &name, const mat4<T> &value) : ValueMatrix<U, T, 4, 4, V>(name)
     {
         setMatrix(value);
     }
@@ -786,12 +802,12 @@ public:
     /**
      * Creates an uninitialized ValueSampler.
      */
-    ValueSampler(UniformType type, const string &name);
+    ValueSampler(UniformType type, const std::string &name);
 
     /**
      * Creates a ValueSampler.
      */
-    ValueSampler(UniformType type, const string &name, ptr<Texture> value);
+    ValueSampler(UniformType type, const std::string &name, ptr<Texture> value);
 
     /**
      * Deletes this ValueSampler.
@@ -822,6 +838,66 @@ private:
      * The current value of this ValueSampler.
      */
     ptr<Texture> value;
+};
+
+// ----------------------------------------------------------------------------
+
+/**
+ * A Value holding a subroutine value.
+ * @ingroup render
+ */
+class ORK_API ValueSubroutine : public Value
+{
+public:
+    /**
+     * Creates an uninitialized ValueSubroutine.
+     */
+    ValueSubroutine(Stage stage, const std::string &name);
+
+    /**
+     * Creates a ValueSubroutine.
+     */
+    ValueSubroutine(Stage stage, const std::string &name, const std::string &value);
+
+    /**
+     * Deletes this ValueSubroutine.
+     */
+    virtual ~ValueSubroutine();
+
+    virtual UniformType getType() const;
+
+    /**
+     * Returns the shader type for this subroutine (vertex, fragment, etc).
+     */
+    Stage getStage() const;
+
+    /**
+     * Returns the current value of this ValueSubroutine.
+     */
+    std::string get() const;
+
+    /**
+     * Sets the value of this uniform.
+     *
+     * @param value the new value for this ValueSubroutine.
+     */
+    void set(const std::string &value);
+
+private:
+    /**
+     * The type of this ValueSubroutine.
+     */
+    UniformType type;
+
+    /**
+     * The shader type for this subroutine (vertex, fragment, etc).
+     */
+    Stage stage;
+
+    /**
+     * The current value of this ValueSubroutine.
+     */
+    std::string value;
 };
 
 }

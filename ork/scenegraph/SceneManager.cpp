@@ -1,29 +1,49 @@
 /*
  * Ork: a small object-oriented OpenGL Rendering Kernel.
- * Copyright (c) 2008-2010 INRIA
+ * Website : http://ork.gforge.inria.fr/
+ * Copyright (c) 2008-2015 INRIA - LJK (CNRS - Grenoble University)
+ * All rights reserved.
+ * Redistribution and use in source and binary forms, with or without 
+ * modification, are permitted provided that the following conditions are met:
+ * 
+ * 1. Redistributions of source code must retain the above copyright notice, 
+ * this list of conditions and the following disclaimer.
+ * 
+ * 2. Redistributions in binary form must reproduce the above copyright notice, 
+ * this list of conditions and the following disclaimer in the documentation 
+ * and/or other materials provided with the distribution.
+ * 
+ * 3. Neither the name of the copyright holder nor the names of its contributors 
+ * may be used to endorse or promote products derived from this software without 
+ * specific prior written permission.
+ * 
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
+ * ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED 
+ * WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. 
+ * IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, 
+ * INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, 
+ * BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, 
+ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF 
+ * LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE 
+ * OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED 
+ * OF THE POSSIBILITY OF SUCH DAMAGE.
  *
- * This library is free software; you can redistribute it and/or modify it
- * under the terms of the GNU Lesser General Public License as published by
- * the Free Software Foundation; either version 3 of the License, or (at
- * your option) any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License
- * for more details.
- *
- * You should have received a copy of the GNU Lesser General Public License
- * along with this library; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301 USA.
  */
-
 /*
- * Authors: Eric Bruneton, Antoine Begault, Guillaume Piolat.
+ * Ork is distributed under the BSD3 Licence. 
+ * For any assistance, feedback and remarks, you can check out the 
+ * mailing list on the project page : 
+ * http://ork.gforge.inria.fr/
+ */
+/*
+ * Main authors: Eric Bruneton, Antoine Begault, Guillaume Piolat.
  */
 
 #include "ork/scenegraph/SceneManager.h"
 
 #include "ork/render/FrameBuffer.h"
+
+using namespace std;
 
 namespace ork
 {
@@ -189,7 +209,7 @@ SceneManager::visibility SceneManager::getVisibility(const box3d &worldBounds)
     return getVisibility(worldFrustumPlanes, worldBounds);
 }
 
-SceneManager::visibility SceneManager::getVisibility(const vec4d frustumPlanes[6], const box3d &b)
+SceneManager::visibility SceneManager::getVisibility(const vec4d *frustumPlanes, const box3d &b)
 {
     visibility v0 = getVisibility(frustumPlanes[0], b);
     if (v0 == INVISIBLE) {
@@ -220,7 +240,7 @@ SceneManager::visibility SceneManager::getVisibility(const vec4d frustumPlanes[6
     return PARTIALLY_VISIBLE;
 }
 
-void SceneManager::getFrustumPlanes(const mat4d &toScreen, vec4d frustumPlanes[6])
+void SceneManager::getFrustumPlanes(const mat4d &toScreen, vec4d *frustumPlanes)
 {
     const double *m = toScreen.coefficients();
     // Extract the LEFT plane
@@ -304,6 +324,24 @@ double SceneManager::getTime()
 double SceneManager::getElapsedTime()
 {
     return dt;
+}
+
+vec3d SceneManager::getWorldCoordinates(int x, int y)
+{
+    float winx, winy, winz;
+    ptr<FrameBuffer> fb = FrameBuffer::getDefault();
+    vec4<GLint> vp = fb->getViewport();
+    float width = (float) vp.z;
+    float height = (float) vp.w;
+    fb->readPixels(x, vp.w - y, 1, 1, DEPTH_COMPONENT, FLOAT, Buffer::Parameters(), CPUBuffer(&winz));
+
+    winx = (x * 2.0f) / width - 1.0f;
+    winy = 1.0f - (y * 2.0f) / height;
+    winz = 2.0f * winz - 1.0f;
+    mat4d screenToWorld = getWorldToScreen().inverse();
+    vec4d p = screenToWorld * vec4d(winx, winy, winz, 1);
+
+    return vec3d(p.x / p.w, p.y / p.w, p.z / p.w);
 }
 
 SceneManager::visibility SceneManager::getVisibility(const vec4d &clip, const box3d &b)

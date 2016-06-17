@@ -1,24 +1,42 @@
 /*
  * Ork: a small object-oriented OpenGL Rendering Kernel.
- * Copyright (c) 2008-2010 INRIA
+ * Website : http://ork.gforge.inria.fr/
+ * Copyright (c) 2008-2015 INRIA - LJK (CNRS - Grenoble University)
+ * All rights reserved.
+ * Redistribution and use in source and binary forms, with or without 
+ * modification, are permitted provided that the following conditions are met:
+ * 
+ * 1. Redistributions of source code must retain the above copyright notice, 
+ * this list of conditions and the following disclaimer.
+ * 
+ * 2. Redistributions in binary form must reproduce the above copyright notice, 
+ * this list of conditions and the following disclaimer in the documentation 
+ * and/or other materials provided with the distribution.
+ * 
+ * 3. Neither the name of the copyright holder nor the names of its contributors 
+ * may be used to endorse or promote products derived from this software without 
+ * specific prior written permission.
+ * 
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
+ * ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED 
+ * WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. 
+ * IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, 
+ * INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, 
+ * BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, 
+ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF 
+ * LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE 
+ * OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED 
+ * OF THE POSSIBILITY OF SUCH DAMAGE.
  *
- * This library is free software; you can redistribute it and/or modify it
- * under the terms of the GNU Lesser General Public License as published by
- * the Free Software Foundation; either version 3 of the License, or (at
- * your option) any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License
- * for more details.
- *
- * You should have received a copy of the GNU Lesser General Public License
- * along with this library; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301 USA.
  */
-
 /*
- * Authors: Eric Bruneton, Antoine Begault, Guillaume Piolat.
+ * Ork is distributed under the BSD3 Licence. 
+ * For any assistance, feedback and remarks, you can check out the 
+ * mailing list on the project page : 
+ * http://ork.gforge.inria.fr/
+ */
+/*
+ * Main authors: Eric Bruneton, Antoine Begault, Guillaume Piolat.
  */
 
 #ifndef _ORK_SCENE_NODE_H_
@@ -33,8 +51,6 @@
 #include "ork/render/MeshBuffers.h"
 #include "ork/render/Module.h"
 #include "ork/scenegraph/Method.h"
-
-using namespace std;
 
 namespace ork
 {
@@ -67,32 +83,32 @@ public:
     /**
      * An iterator to iterate over a set of flags.
      */
-    typedef SetIterator<string> FlagIterator;
+    typedef SetIterator<std::string> FlagIterator;
 
     /**
      * An iterator to iterate over a map of Value.
      */
-    typedef MapIterator<string, ptr<Value> > ValueIterator;
+    typedef MapIterator<std::string, ptr<Value> > ValueIterator;
 
     /**
      * An iterator to iterate over a map of Module.
      */
-    typedef MapIterator<string, ptr<Module> > ModuleIterator;
+    typedef MapIterator<std::string, ptr<Module> > ModuleIterator;
 
     /**
      * An iterator to iterate over a map of Mesh.
      */
-    typedef MapIterator<string, ptr<MeshBuffers> > MeshIterator;
+    typedef MapIterator<std::string, ptr<MeshBuffers> > MeshIterator;
 
     /**
      * An iterator to iterate over a map of SceneNode fields.
      */
-    typedef MapIterator<string, ptr<Object> > FieldIterator;
+    typedef MapIterator<std::string, ptr<Object> > FieldIterator;
 
     /**
      * An iterator to iterate over a map of SceneNode Method.
      */
-    typedef MapIterator<string, ptr<Method> > MethodIterator;
+    typedef MapIterator<std::string, ptr<Method> > MethodIterator;
 
     /**
      * True if this scene node is visible, false otherwise.
@@ -180,21 +196,21 @@ public:
      *
      * @param flag a flag.
      */
-    bool hasFlag(const string &flag);
+    bool hasFlag(const std::string &flag);
 
     /**
      * Adds the given flag to the flags of this node.
      *
      * @param flag the flag to be added to this node.
      */
-    void addFlag(const string &flag);
+    void addFlag(const std::string &flag);
 
     /**
      * Removes the given flag from the flags of this node.
      *
      * @param flag the flag to be removed from this node.
      */
-    void removeFlag(const string &flag);
+    void removeFlag(const std::string &flag);
 
     /**
      * Returns the values of this node.
@@ -206,7 +222,7 @@ public:
      *
      * @param name the local name of a value.
      */
-    ptr<Value> getValue(const string &name);
+    ptr<Value> getValue(const std::string &name);
 
     /**
      * Adds a value to this node under the given local name.
@@ -220,7 +236,7 @@ public:
      *
      * @param name the local name of the value.
      */
-    void removeValue(const string &name);
+    void removeValue(const std::string &name);
 
     /**
      * Returns the modules of this node.
@@ -232,7 +248,7 @@ public:
      *
      * @param name the local name of a module.
      */
-    ptr<Module> getModule(const string &name);
+    ptr<Module> getModule(const std::string &name);
 
     /**
      * Adds a module to this node under the given local name.
@@ -240,14 +256,14 @@ public:
      * @param name a local name.
      * @param s a Module.
      */
-    void addModule(const string &name, ptr<Module> s);
+    void addModule(const std::string &name, ptr<Module> s);
 
     /**
      * Removes the module whose local name is given from this node.
      *
      * @param name the local name of the module.
      */
-    void removeModule(const string &name);
+    void removeModule(const std::string &name);
 
     /**
      * Returns the meshes of this node.
@@ -259,7 +275,7 @@ public:
      *
      * @param name the local name of a mesh.
      */
-    ptr<MeshBuffers> getMesh(const string &name);
+    ptr<MeshBuffers> getMesh(const std::string &name);
 
     /**
      * Adds a mesh to this node under the given local name.
@@ -267,14 +283,14 @@ public:
      * @param name a local name.
      * @param m a MeshBuffers.
      */
-    void addMesh(const string &name, ptr<MeshBuffers> m);
+    void addMesh(const std::string &name, ptr<MeshBuffers> m);
 
     /**
      * Removes the mesh whose local name is given from this node.
      *
      * @param name the local name of the mesh.
      */
-    void removeMesh(const string &name);
+    void removeMesh(const std::string &name);
 
     /**
      * Returns the fields of this node.
@@ -286,7 +302,7 @@ public:
      *
      * @param name the name of a field.
      */
-    ptr<Object> getField(const string &name);
+    ptr<Object> getField(const std::string &name);
 
     /**
      * Adds a field to this node under the given name.
@@ -294,14 +310,14 @@ public:
      * @param name the field name.
      * @param f the field value.
      */
-    void addField(const string &name, ptr<Object> f);
+    void addField(const std::string &name, ptr<Object> f);
 
     /**
      * Removes the field whose name is given from this node.
      *
      * @param name the name of the field.
      */
-    void removeField(const string &name);
+    void removeField(const std::string &name);
 
     /**
      * Returns the methods of this node.
@@ -313,7 +329,7 @@ public:
      *
      * @param name the name of a method.
      */
-    ptr<Method> getMethod(const string &name);
+    ptr<Method> getMethod(const std::string &name);
 
     /**
      * Adds a method to this node under the given name.
@@ -321,14 +337,14 @@ public:
      * @param name the method name.
      * @param m the method.
      */
-    void addMethod(const string &name, ptr<Method> m);
+    void addMethod(const std::string &name, ptr<Method> m);
 
     /**
      * Removes the method whose name is given from this node.
      *
      * @param name the name of the method.
      */
-    void removeMethod(const string &name);
+    void removeMethod(const std::string &name);
 
     /**
      * Returns the number of child node of this node.
@@ -416,37 +432,37 @@ private:
     /**
      * The flags of this node.
      */
-    set<string> flags;
+    std::set<std::string> flags;
 
     /**
      * The values of this node.
      */
-    map<string, ptr<Value> > values;
+    std::map<std::string, ptr<Value> > values;
 
     /**
      * The modules of this node.
      */
-    map<string, ptr<Module> > modules;
+    std::map<std::string, ptr<Module> > modules;
 
     /**
      * The meshes of this node.
      */
-    map<string, ptr<MeshBuffers> > meshes;
+    std::map<std::string, ptr<MeshBuffers> > meshes;
 
     /**
      * The fields of this node.
      */
-    map<string, ptr<Object> > fields;
+    std::map<std::string, ptr<Object> > fields;
 
     /**
      * The methods of this node.
      */
-    map<string, ptr<Method> > methods;
+    std::map<std::string, ptr<Method> > methods;
 
     /**
      * The child nodes of this node.
      */
-    vector< ptr<SceneNode> > children;
+    std::vector< ptr<SceneNode> > children;
 
     /**
      * Sets the SceneManager that manages the scene graph to which this node

@@ -1,24 +1,42 @@
 /*
  * Ork: a small object-oriented OpenGL Rendering Kernel.
- * Copyright (c) 2008-2010 INRIA
+ * Website : http://ork.gforge.inria.fr/
+ * Copyright (c) 2008-2015 INRIA - LJK (CNRS - Grenoble University)
+ * All rights reserved.
+ * Redistribution and use in source and binary forms, with or without 
+ * modification, are permitted provided that the following conditions are met:
+ * 
+ * 1. Redistributions of source code must retain the above copyright notice, 
+ * this list of conditions and the following disclaimer.
+ * 
+ * 2. Redistributions in binary form must reproduce the above copyright notice, 
+ * this list of conditions and the following disclaimer in the documentation 
+ * and/or other materials provided with the distribution.
+ * 
+ * 3. Neither the name of the copyright holder nor the names of its contributors 
+ * may be used to endorse or promote products derived from this software without 
+ * specific prior written permission.
+ * 
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
+ * ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED 
+ * WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. 
+ * IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, 
+ * INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, 
+ * BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, 
+ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF 
+ * LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE 
+ * OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED 
+ * OF THE POSSIBILITY OF SUCH DAMAGE.
  *
- * This library is free software; you can redistribute it and/or modify it
- * under the terms of the GNU Lesser General Public License as published by
- * the Free Software Foundation; either version 3 of the License, or (at
- * your option) any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License
- * for more details.
- *
- * You should have received a copy of the GNU Lesser General Public License
- * along with this library; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301 USA.
  */
-
 /*
- * Authors: Eric Bruneton, Antoine Begault, Guillaume Piolat.
+ * Ork is distributed under the BSD3 Licence. 
+ * For any assistance, feedback and remarks, you can check out the 
+ * mailing list on the project page : 
+ * http://ork.gforge.inria.fr/
+ */
+/*
+ * Main authors: Eric Bruneton, Antoine Begault, Guillaume Piolat.
  */
 
 #include "ork/scenegraph/SetTransformsTask.h"
@@ -26,6 +44,8 @@
 #include "ork/render/FrameBuffer.h"
 #include "ork/resource/ResourceTemplate.h"
 #include "ork/scenegraph/SceneManager.h"
+
+using namespace std;
 
 namespace ork
 {
@@ -35,18 +55,18 @@ SetTransformsTask::SetTransformsTask() : AbstractTask("SetTransformsTask")
 }
 
 SetTransformsTask::SetTransformsTask(const string &screen, QualifiedName m,
-                                     const char *t, const char *ltow, const char *ltos,
-                                     const char *ctow, const char *ctos, const char *stoc,
-                                     const char *wtos, const char *wp, const char *wd) :
+        const char *t, const char *ltow, const char *ltos,
+        const char *ctow, const char *ctos, const char *stoc,
+        const char *wtos, const char *wp, const char *wd) :
     AbstractTask("SetTransformsTask")
 {
     init(screen, m, t, ltow, ltos, ctow, ctos, stoc, wtos, wp, wd);
 }
 
 void SetTransformsTask::init(const string &screen, QualifiedName m,
-                             const char *t, const char *ltow, const char *ltos,
-                             const char *ctow, const char *ctos, const char *stoc,
-                             const char *wtos, const char *wp, const char *wd)
+        const char *t, const char *ltow, const char *ltos,
+        const char *ctow, const char *ctos, const char *stoc,
+        const char *wtos, const char *wp, const char *wd)
 {
     this->screen = QualifiedName(screen + ".");
     this->m = m;
@@ -78,15 +98,11 @@ ptr<Task> SetTransformsTask::getTask(ptr<Object> context)
 {
     ptr<SceneNode> n = context.cast<Method>()->getOwner();
     ptr<SceneNode> screenNode;
-    if (ltos == NULL || wtos == NULL)
-    {
-        if (screen.target.size() > 0)
-        {
+    if (ltos == NULL || wtos == NULL) {
+        if (screen.target.size() > 0) {
             screenNode = screen.getTarget(n);
-            if (screenNode == NULL)
-            {
-                if (Logger::ERROR_LOGGER != NULL)
-                {
+            if (screenNode == NULL) {
+                if (Logger::ERROR_LOGGER != NULL) {
                     Logger::ERROR_LOGGER->log("SCENEGRAPH", "SetTransforms: cannot find screen node");
                 }
                 throw exception();
@@ -94,19 +110,24 @@ ptr<Task> SetTransformsTask::getTask(ptr<Object> context)
         }
     }
 
-    if (m.target.size() > 0 && module == NULL)
-    {
+    if (m.target.size() > 0 && module == NULL) {
         module = m.getTarget(n)->getModule(m.name);
-
-        if (module == NULL)
-        {
-            if (Logger::ERROR_LOGGER != NULL)
-            {
-                Logger::ERROR_LOGGER->log("SCENEGRAPH", "SetTransforms: cannot find " + m.name + " node");
+        if (module == NULL) {
+            if (Logger::ERROR_LOGGER != NULL) {
+                Logger::ERROR_LOGGER->log("SCENEGRAPH", "SetTransforms: cannot find " + m.target + "." + m.name + " module");
+            }
+            throw exception();
+        }
+    } else if (m.name.size() > 0 && module == NULL) {
+        module = n->getOwner()->getResourceManager()->loadResource(m.name).cast<Module>();
+        if (module == NULL) {
+            if (Logger::ERROR_LOGGER != NULL) {
+                Logger::ERROR_LOGGER->log("SCENEGRAPH", "SetTransforms: cannot find " + m.name + " module");
             }
             throw exception();
         }
     }
+
     return new Impl(screenNode, n, this);
 }
 
@@ -124,8 +145,7 @@ void SetTransformsTask::swap(ptr<SetTransformsTask> t)
     std::swap(wp, t->wp);
     std::swap(wd, t->wd);
 
-    if (lastProg != NULL)
-    {
+    if (lastProg != NULL) {
         time = this->t == NULL ? NULL : lastProg->getUniform2f(this->t);
         localToWorld = ltow == NULL ? NULL : lastProg->getUniformMatrix4f(ltow);
         localToScreen = ltos == NULL ? NULL : lastProg->getUniformMatrix4f(ltos);
@@ -149,32 +169,25 @@ SetTransformsTask::Impl::~Impl()
 
 bool SetTransformsTask::Impl::run()
 {
-    if (Logger::DEBUG_LOGGER != NULL)
-    {
+    if (Logger::DEBUG_LOGGER != NULL) {
         Logger::DEBUG_LOGGER->log("SCENEGRAPH", "SetTransforms");
     }
 
     ptr<Program> prog = NULL;
-    if (source->module != NULL && !source->module->getUsers().empty())
-    {
+    if (source->module != NULL && !source->module->getUsers().empty()) {
         prog = *(source->module->getUsers().begin());
-    }
-    else
-    {
+    } else {
         prog = SceneManager::getCurrentProgram();
     }
 
-    if (prog == NULL)
-    {
+    if (prog == NULL) {
         return true;
     }
-    if (Logger::DEBUG_LOGGER != NULL)
-    {
+    if (Logger::DEBUG_LOGGER != NULL) {
         Logger::DEBUG_LOGGER->logf("SCENEGRAPH", "SetTransforms %d", prog.get());
     }
 
-    if (prog != source->lastProg)
-    {
+    if (prog != source->lastProg) {
         source->time = source->t == NULL ? NULL : prog->getUniform2f(source->t);
         source->localToWorld = source->ltow == NULL ? NULL : prog->getUniformMatrix4f(source->ltow);
         source->localToScreen = source->ltos == NULL ? NULL : prog->getUniformMatrix4f(source->ltos);
@@ -187,24 +200,18 @@ bool SetTransformsTask::Impl::run()
         source->lastProg = prog;
     }
 
-    if (source->time != NULL)
-    {
+    if (source->time != NULL) {
         source->time->set(vec2f(context->getOwner()->getTime(), context->getOwner()->getElapsedTime()));
     }
 
-    if (source->localToWorld != NULL)
-    {
+    if (source->localToWorld != NULL) {
         source->localToWorld->setMatrix(context->getLocalToWorld().cast<float>());
     }
 
-    if (source->localToScreen!= NULL)
-    {
-        if (source->screen.target.size() == 0)
-        {
+    if (source->localToScreen!= NULL) {
+        if (source->screen.target.size() == 0) {
             source->localToScreen->setMatrix(context->getLocalToScreen().cast<float>());
-        }
-        else
-        {
+        } else {
             mat4d ltow = context->getLocalToWorld();
             mat4d wtos = screenNode->getWorldToLocal();
             mat4f ltos = (wtos * ltow).cast<float>();
@@ -212,44 +219,35 @@ bool SetTransformsTask::Impl::run()
         }
     }
 
-    if (source->cameraToWorld != NULL)
-    {
+    if (source->cameraToWorld != NULL) {
         mat4d ctow = context->getOwner()->getCameraNode()->getLocalToWorld();
         source->cameraToWorld->setMatrix(ctow.cast<float>());
     }
 
-    if (source->cameraToScreen != NULL)
-    {
+    if (source->cameraToScreen != NULL) {
         mat4d ctos = context->getOwner()->getCameraToScreen();
         source->cameraToScreen->setMatrix(ctos.cast<float>());
     }
 
-    if (source->screenToCamera != NULL)
-    {
+    if (source->screenToCamera != NULL) {
         mat4d ctos = context->getOwner()->getCameraToScreen();
         source->screenToCamera->setMatrix(ctos.inverse().cast<float>());
     }
 
-    if (source->worldToScreen != NULL)
-    {
-        if (source->screen.target.size() == 0)
-        {
+    if (source->worldToScreen != NULL) {
+        if (source->screen.target.size() == 0) {
             source->worldToScreen->setMatrix(context->getOwner()->getWorldToScreen().cast<float>());
-        }
-        else
-        {
+        } else {
             mat4f wtos = screenNode->getWorldToLocal().cast<float>();
             source->worldToScreen->setMatrix(wtos);
         }
     }
 
-    if (source->worldPos != NULL)
-    {
+    if (source->worldPos != NULL) {
         source->worldPos->set(context->getWorldPos().cast<float>());
     }
 
-    if (source->worldDir != NULL)
-    {
+    if (source->worldDir != NULL) {
         vec4d d = context->getLocalToWorld() * vec4d::UNIT_Z;
         source->worldDir->set(vec3f((float) -d.x, (float) -d.y, (float) -d.z));
     }

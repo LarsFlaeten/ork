@@ -1,4 +1,4 @@
-/*
+/**
  * Ork: a small object-oriented OpenGL Rendering Kernel.
  * Copyright (c) 2008-2010 INRIA
  *
@@ -29,6 +29,8 @@
 #include "ork/resource/ResourceTemplate.h"
 #include "ork/render/FrameBuffer.h"
 
+using namespace std;
+
 #define GL_DOUBLE_MAT2x3 0x8F49
 #define GL_DOUBLE_MAT2x4 0x8F4A
 #define GL_DOUBLE_MAT3x2 0x8F4B
@@ -47,25 +49,65 @@ Program::Program() : Object("Program")
 {
 }
 
-Program::Program(const vector< ptr<Module> > &modules) : Object("Program")
+Program::Program(const vector< ptr<Module> > &modules, bool separable) : Object("Program")
 {
-    init(modules);
+    init(modules, separable);
 }
 
-Program::Program(ptr<Module> module) : Object("Program")
+Program::Program(ptr<Module> module, bool separable) : Object("Program")
 {
     vector< ptr<Module> > modules;
     modules.push_back(module);
-    init(modules);
+    init(modules, separable);
 }
 
-void Program::init(const vector< ptr<Module> > &modules)
+Program::Program(GLenum format, GLsizei length, unsigned char *binary, bool separable) : Object("Program")
+{
+    init(format, length, binary, separable);
+}
+
+Program::Program(ptr<Program> vertex, ptr<Program> tessControl, ptr<Program> tessEval, ptr<Program> geometry, ptr<Program> fragment) :
+    Object("Program")
+{
+    programId = 0;
+    glGenProgramPipelines(1, &pipelineId);
+
+    assert(pipelineId > 0);
+    if (vertex != NULL) {
+        init(VERTEX, vertex);
+        glUseProgramStages(pipelineId, GL_VERTEX_SHADER_BIT, vertex->programId);
+    }
+    if (tessControl != NULL) {
+        init(TESSELATION_CONTROL, tessControl);
+        glUseProgramStages(pipelineId, GL_TESS_CONTROL_SHADER_BIT, tessControl->programId);
+    }
+    if (tessEval != NULL) {
+        init(TESSELATION_EVALUATION, tessEval);
+        glUseProgramStages(pipelineId, GL_TESS_EVALUATION_SHADER_BIT, tessEval->programId);
+    }
+    if (geometry != NULL) {
+        init(GEOMETRY, geometry);
+        glUseProgramStages(pipelineId, GL_GEOMETRY_SHADER_BIT, geometry->programId);
+    }
+    if (fragment != NULL) {
+        init(FRAGMENT, fragment);
+        glUseProgramStages(pipelineId, GL_FRAGMENT_SHADER_BIT, fragment->programId);
+    }
+
+    uniformSubroutines = NULL;
+    dirtyStages = 0;
+}
+
+void Program::init(const vector< ptr<Module> > &modules, bool separable)
 {
     this->modules = modules;
 
     // creates the program
     programId = glCreateProgram();
+    pipelineId = 0;
+
     assert(programId > 0);
+    programIds.push_back(programId);
 
     int feedbackVaryingCount = 0;
 
@@ -98,7 +140,7 @@ void Program::init(const vector< ptr<Module> > &modules)
         const char **varyings = new const char*[feedbackVaryingCount];
         for (i = this->modules.begin(); i != this->modules.end(); ++i) {
             vector<string>::iterator j = (*i)->feedbackVaryings.begin();
-            for ( ; j != (*i)->feedbackVaryings.begin(); ++j) {
+            for ( ; j != (*i)->feedbackVaryings.end(); ++j) {
                 varyings[index++] = (*j).c_str();
             }
             if ((*i)->feedbackMode != 0) {
@@ -109,16 +151,56 @@ void Program::init(const vector< ptr<Module> > &modules)
                 }
             }
         }
-        delete[] varyings;
-        assert(interleaved != 0);
 
+        assert(interleaved != 0);
         glTransformFeedbackVaryings(programId, feedbackVaryingCount, varyings,
             interleaved == 1 ? GL_INTERLEAVED_ATTRIBS : GL_SEPARATE_ATTRIBS);
+
+        delete[] varyings;
     }
 
     // link everything together
-    GLint linked;
+    if (separable) {
+        glProgramParameteri(programId, GL_PROGRAM_SEPARABLE, GL_TRUE);
+    }
     glLinkProgram(programId);
+
+    initUniforms();
+}
+
+void Program::init(GLenum format, GLsizei length, unsigned char *binary, bool separable)
+{
+    programId = glCreateProgram();
+    pipelineId = 0;
+
+    assert(programId > 0);
+    programIds.push_back(programId);
+
+    if (separable) {
+        glProgramParameteri(programId, GL_PROGRAM_SEPARABLE, GL_TRUE);
+    }
+    glProgramBinary(programId, format, binary, length);
+
+    initUniforms();
+}
+
+void Program::init(Stage s, ptr<Program> p)
+{
+    assert(p->programId > 0);
+    for (unsigned int i = 0; i < pipelinePrograms.size(); ++i) {
+        if (pipelinePrograms[i] == p) {
+            pipelineStages[i] |= (1 << s);
+            return;
+        }
+    }
+    programIds.push_back(p->programId);
+    pipelinePrograms.push_back(p);
+    pipelineStages.push_back(1 << s);
+}
+
+void Program::initUniforms()
+{
+    GLint linked;
     glGetProgramiv(programId, GL_LINK_STATUS, &linked);
     if (linked == GL_FALSE) {
         // if a link error occured ...
@@ -133,15 +215,23 @@ void Program::init(const vector< ptr<Module> > &modules)
             assert(false);
         }
         glDeleteProgram(programId);
-        programId = -1;
+        programId = 0;
         throw exception();
     }
 
     GLint maxNameLength;
-    GLint maxBlockNameLength;
+    GLint maxLength;
     glGetProgramiv(programId, GL_ACTIVE_UNIFORM_MAX_LENGTH, &maxNameLength);
-    glGetProgramiv(programId, GL_ACTIVE_UNIFORM_BLOCK_MAX_NAME_LENGTH, &maxBlockNameLength);
-    maxNameLength = max(maxNameLength, maxBlockNameLength);
+    glGetProgramiv(programId, GL_ACTIVE_UNIFORM_BLOCK_MAX_NAME_LENGTH, &maxLength);
+    maxNameLength = max(maxNameLength, maxLength);
+    if (FrameBuffer::getMajorVersion() >= 4) {
+        for (Stage s = VERTEX; s <= FRAGMENT; s = Stage(s + 1)) {
+            glGetProgramStageiv(programId, getStage(s), GL_ACTIVE_SUBROUTINE_UNIFORM_MAX_LENGTH, &maxLength);
+            maxNameLength = max(maxNameLength, maxLength);
+            glGetProgramStageiv(programId, getStage(s), GL_ACTIVE_SUBROUTINE_MAX_LENGTH, &maxLength);
+            maxNameLength = max(maxNameLength, maxLength);
+        }
+    }
 
     char* buf = new char[maxNameLength];
 
@@ -173,6 +263,9 @@ void Program::init(const vector< ptr<Module> > &modules)
         glGetActiveUniformsiv(programId, 1, &i, GL_UNIFORM_IS_ROW_MAJOR, &isRowMajor);
 
         string name = string(buf);
+        if (size > 1 && name.find_first_of('[') != string::npos) {
+            name = name.substr(0, name.find_first_of('['));
+        }
 
         ptr<UniformBlock> b = NULL;
         if (blockIndex != -1) {
@@ -446,6 +539,77 @@ void Program::init(const vector< ptr<Module> > &modules)
             }
         }
     }
+
+    uniformSubroutines = NULL;
+    dirtyStages = 0;
+
+    if (FrameBuffer::getMajorVersion() >= 4) {
+        for (Stage s = VERTEX; s <= FRAGMENT; s = Stage(s + 1)) {
+            GLint n;
+            glGetProgramStageiv(programId, getStage(s), GL_ACTIVE_SUBROUTINE_UNIFORMS, &n);
+            for (GLint i = 0; i < n; ++i) {
+                GLint size;
+                glGetActiveSubroutineUniformiv(programId, getStage(s), i, GL_UNIFORM_SIZE, &size);
+                GLsizei length;
+                glGetActiveSubroutineUniformName(programId, getStage(s), i, GLsizei(maxLength), &length, buf);
+                string uname = string(buf);
+                if (size > 1 && uname.find_first_of('[') != string::npos) {
+                    uname = uname.substr(0, uname.find_first_of('['));
+                }
+                for (GLint j = 0; j < size; ++j) {
+                    string sruName = uname;
+                    if (size > 1) {
+                        ostringstream oss;
+                        oss << uname << "[" << j << "]";
+                        sruName = oss.str();
+                    }
+                    GLint sruLocation = glGetSubroutineUniformLocation(programId, getStage(s), sruName.c_str());
+                    GLint m;
+                    glGetActiveSubroutineUniformiv(programId, getStage(s), i, GL_NUM_COMPATIBLE_SUBROUTINES, &m);
+                    GLint *indices = new GLint[m];
+                    vector<string> srNames;
+                    vector<GLint> srIndices;
+                    glGetActiveSubroutineUniformiv(programId, getStage(s), i, GL_COMPATIBLE_SUBROUTINES, indices);
+                    for (int k = 0; k < m; ++k) {
+                        glGetActiveSubroutineName(programId, getStage(s), indices[k], maxLength, &length, buf);
+                        srNames.push_back(string(buf));
+                        srIndices.push_back(indices[k]);
+                    }
+                    delete[] indices;
+                    ptr<UniformSubroutine> u = new UniformSubroutine(this, s, sruName, sruLocation, srNames, srIndices);
+                    switch (s) {
+                    case VERTEX:
+                        uniforms.insert(make_pair("VERTEX " + sruName, u));
+                        break;
+                    case TESSELATION_CONTROL:
+                        uniforms.insert(make_pair("TESS_CONTROL " + sruName, u));
+                        break;
+                    case TESSELATION_EVALUATION:
+                        uniforms.insert(make_pair("TESS_EVAL " + sruName, u));
+                        break;
+                    case GEOMETRY:
+                        uniforms.insert(make_pair("GEOMETRY " + sruName, u));
+                        break;
+                    case FRAGMENT:
+                        uniforms.insert(make_pair("FRAGMENT " + sruName, u));
+                        break;
+                    }
+                }
+            }
+            glGetProgramStageiv(programId, getStage(s), GL_ACTIVE_SUBROUTINE_UNIFORM_LOCATIONS, &n);
+            if (n > 0) {
+                if (uniformSubroutines == NULL) {
+                    uniformSubroutines = new GLuint*[FRAGMENT - VERTEX + 1];
+                    for (Stage t = VERTEX; t <= FRAGMENT; t = Stage(t + 1)) {
+                        uniformSubroutines[t] = NULL;
+                    }
+                }
+                uniformSubroutines[s] = new GLuint[n + 1];
+                uniformSubroutines[s][0] = n;
+            }
+        }
+    }
+
     delete[] buf;
 
     // finds GPUBuffer suitable for the blocks used in this Program
@@ -462,6 +626,7 @@ void Program::init(const vector< ptr<Module> > &modules)
     }
 
     // sets the initial values of the uniforms
+    vector< ptr<Module> >::iterator i;
     for (i = this->modules.begin(); i != this->modules.end(); ++i) {
         ptr<Module> module = *i;
         map<string, ptr<Value> >::iterator j = module->initialValues.begin();
@@ -491,6 +656,8 @@ void Program::init(const vector< ptr<Module> > &modules)
             ++j;
         }
     }
+
+    assert(FrameBuffer::getError() == 0);
 }
 
 Program::~Program()
@@ -498,7 +665,8 @@ Program::~Program()
     if (CURRENT == this) {
         CURRENT = NULL;
     }
-    if (programId != -1) {
+
+    if (programId != 0) {
         updateTextureUsers(false);
         updateUniforms(NULL);
     }
@@ -507,12 +675,26 @@ Program::~Program()
         modules[i]->users.erase(this);
     }
 
-    glDeleteProgram(programId);
+    if (uniformSubroutines != NULL) {
+        for (Stage s = VERTEX; s <= FRAGMENT; s = Stage(s + 1)) {
+            if (uniformSubroutines[s] != NULL) {
+                delete[] uniformSubroutines[s];
+            }
+        }
+        delete[] uniformSubroutines;
+    }
+
+    if (programId > 0) {
+        glDeleteProgram(programId);
+    }
+    if (pipelineId > 0) {
+        glDeleteProgramPipelines(1, &pipelineId);
+    }
 }
 
 int Program::getId() const
 {
-    return programId;
+    return programId > 0 ? programId : pipelineId;
 }
 
 int Program::getModuleCount() const
@@ -523,6 +705,17 @@ int Program::getModuleCount() const
 ptr<Module> Program::getModule(int index) const
 {
     return modules[index];
+}
+
+vector< ptr<Uniform> > Program::getUniforms() const
+{
+    vector< ptr<Uniform> > result;
+    map<string, ptr<Uniform> >::const_iterator i = uniforms.begin();
+    while (i != uniforms.end()) {
+        result.push_back(i->second);
+        i++;
+    }
+    return result;
 }
 
 ptr<Uniform> Program::getUniform(const string &name)
@@ -544,8 +737,25 @@ ptr<UniformBlock> Program::getUniformBlock(const string &name)
     return i->second;
 }
 
+unsigned char *Program::getBinary(GLsizei &length, GLenum &format)
+{
+    if (programId == 0) {
+        length = 0;
+        return NULL;
+    }
+    GLsizei len = 0;
+    glGetProgramiv(programId, GL_PROGRAM_BINARY_LENGTH, &len);
+    unsigned char *binary = new unsigned char[len];
+    glGetProgramBinary(programId, len, &length, &format, binary);
+    return binary;
+}
+
 void Program::swap(ptr<Program> p)
 {
+    if (CURRENT == this) {
+        CURRENT = NULL;
+    }
+
     updateTextureUsers(false);
     p->updateTextureUsers(false);
 
@@ -554,8 +764,13 @@ void Program::swap(ptr<Program> p)
 
     std::swap(modules, p->modules);
     std::swap(programId, p->programId);
+    std::swap(pipelineId, p->pipelineId);
+    std::swap(programIds, p->programIds);
+    std::swap(pipelinePrograms, p->pipelinePrograms);
+    std::swap(pipelineStages, p->pipelineStages);
     std::swap(uniforms, p->uniforms);
     std::swap(uniformBlocks, p->uniformBlocks);
+    std::swap(uniformSubroutines, p->uniformSubroutines);
 
     map<string, ptr<Uniform> >::iterator i = p->uniforms.begin();
     while (i != p->uniforms.end()) {
@@ -577,7 +792,7 @@ void Program::swap(ptr<Program> p)
             // 'u' is no longer an uniform of this program; we store it in the
             // oldUniforms map to reuse this object if this uniform becomes a
             // member of this program again, in future versions
-            oldUniforms[u->getName()] = u;
+            oldUniforms[i->first] = u;
         }
         ++i;
     }
@@ -585,7 +800,7 @@ void Program::swap(ptr<Program> p)
     i = oldUniforms.begin();
     while (i != oldUniforms.end()) {
         ptr<Uniform> oldU = i->second;
-        map<string, ptr<Uniform> >::iterator j = uniforms.find(oldU->getName());
+        map<string, ptr<Uniform> >::iterator j = uniforms.find(i->first);
         if (j != uniforms.end()) {
             // if an uniform of this program corresponds to an old uniform object,
             // we reuse the old uniform object (so that clients do not have to
@@ -618,15 +833,32 @@ void Program::swap(ptr<Program> p)
         ++k;
     }
 
+    if (uniformSubroutines != NULL && p->uniformSubroutines != NULL) {
+        for (Stage s = VERTEX; s <= FRAGMENT; s = Stage(s + 1)) {
+            if (uniformSubroutines[s] != NULL && p->uniformSubroutines[s] != NULL) {
+                if (uniformSubroutines[s][0] == p->uniformSubroutines[s][0]) {
+                    std::swap(uniformSubroutines[s], p->uniformSubroutines[s]);
+                }
+            }
+        }
+    }
+
     updateUniforms(this);
-    p->updateUniforms(&(*p));
+    p->updateUniforms(p.get());
+
+    dirtyStages = 0;
+    p->dirtyStages = 0;
+    for (Stage s = VERTEX; s <= FRAGMENT; s = Stage(s + 1)) {
+        if (uniformSubroutines != NULL && uniformSubroutines[s] != NULL) {
+            dirtyStages |= 1 << s;
+        }
+        if (p->uniformSubroutines != NULL && p->uniformSubroutines[s] != NULL) {
+            p->dirtyStages |= 1 << s;
+        }
+    }
 
     updateTextureUsers(true);
     p->updateTextureUsers(true);
-
-    if (CURRENT == this) {
-        CURRENT = NULL;
-    }
 }
 
 bool Program::checkSamplers()
@@ -640,54 +872,67 @@ bool Program::checkSamplers()
             return false;
         }
     }
+    for (unsigned int i = 0; i < pipelinePrograms.size(); ++i) {
+        if (!pipelinePrograms[i]->checkSamplers()) {
+            return false;
+        }
+    }
     return true;
 }
 
 void Program::set()
 {
-    if (Logger::DEBUG_LOGGER != NULL) {
-        Logger::DEBUG_LOGGER->log("RENDER", "Switching Program");
-    }
-    assert(FrameBuffer::getError() == 0);
     if (CURRENT != this) {
         CURRENT = this;
-        glUseProgram(programId);
-
-        for (unsigned int i = 0; i < uniformSamplers.size(); ++i) {
-            uniformSamplers[i]->setValue();
+        if (pipelineId == 0) {
+            glUseProgram(programId);
+        } else {
+            glBindProgramPipeline(pipelineId);
+            glUseProgram(0);
         }
+		if (Logger::DEBUG_LOGGER != NULL) {
+			Logger::DEBUG_LOGGER->log("RENDER", "Set Program");
+		}
 
-        map<string, ptr<UniformBlock> >::iterator j = uniformBlocks.begin();
-        while (j != uniformBlocks.end()) {
-            ptr<UniformBlock> u = j->second;
-            GLint unit = u->buffer->bindToUniformBufferUnit(programId);
-            assert(unit >= 0);
-            glUniformBlockBinding(programId, u->index, GLuint(unit));
-            j++;
+        if (pipelineId == 0) {
+            bindTexturesAndUniformBlocks();
+        } else {
+            for (unsigned int i = 0; i < pipelinePrograms.size(); ++i) {
+                pipelinePrograms[i]->bindTexturesAndUniformBlocks();
+            }
         }
+    }
 
-        assert(FrameBuffer::getError() == 0);
+    if (pipelineId == 0) {
+        updateDirtyUniforms(0xFFFFFFFF);
+    } else {
+        for (unsigned int i = 0; i < pipelinePrograms.size(); ++i) {
+            pipelinePrograms[i]->updateDirtyUniforms(pipelineStages[i]);
+        }
+    }
+}
+
+void Program::bindTexturesAndUniformBlocks()
+{
+    for (unsigned int i = 0; i < uniformSamplers.size(); ++i) {
+        uniformSamplers[i]->setValue();
     }
 
     map<string, ptr<UniformBlock> >::iterator j = uniformBlocks.begin();
-
-    if (Logger::DEBUG_LOGGER != NULL && Logger::DEBUG_LOGGER->hasTopic("RENDER")) {
-        ostringstream oss;
-        int nBlocks = 0;
-        while (j != uniformBlocks.end()) {
-            ptr<UniformBlock> u = j->second;
-            if (u->isMapped()) {
-                oss << j->first.c_str() << ";";
-                ++nBlocks;
-            }
-            ++j;
-        }
-        if (nBlocks > 0) {
-            Logger::DEBUG_LOGGER->logf("RENDER", "Updating %d block(s) [%s]", nBlocks, oss.str().c_str());
-        }
-        j = uniformBlocks.begin();
+    while (j != uniformBlocks.end()) {
+        ptr<UniformBlock> u = j->second;
+        GLint unit = u->buffer->bindToUniformBufferUnit(Program::CURRENT->programIds);
+        assert(unit >= 0);
+        glUniformBlockBinding(programId, u->index, GLuint(unit));
+        j++;
     }
 
+    assert(FrameBuffer::getError() == 0);
+}
+
+void Program::updateDirtyUniforms(int stages)
+{
+    map<string, ptr<UniformBlock> >::iterator j = uniformBlocks.begin();
     while (j != uniformBlocks.end()) {
         ptr<UniformBlock> u = j->second;
         if (u->isMapped()) {
@@ -701,12 +946,24 @@ void Program::set()
     while (i != uniforms.end()) {
         ptr<Uniform> u = i->second;
         if (u->dirty) {
+            if (CURRENT->pipelineId > 0) {
+                glActiveShaderProgram(CURRENT->pipelineId, programId);
+            }
             u->setValue();
             u->dirty = false;
         }
         i++;
     }
 #endif
+
+    if ((dirtyStages & stages) != 0) {
+        for (Stage s = VERTEX; s <= FRAGMENT; s = Stage(s + 1)) {
+            if (((dirtyStages & stages) & (1 << s)) != 0) {
+                glUniformSubroutinesuiv(getStage(s), uniformSubroutines[s][0], uniformSubroutines[s] + 1);
+            }
+        }
+        dirtyStages &= ~stages;
+    }
 }
 
 void Program::updateTextureUsers(bool add)
@@ -738,7 +995,6 @@ void Program::updateUniformBlocks(bool add)
             }
             ++j;
         }
-
     } else {
         map<string, ptr<Uniform> >::iterator i = uniforms.begin();
         while (i != uniforms.end()) {
@@ -758,22 +1014,24 @@ void Program::updateUniforms(Program *owner)
     map<string, ptr<Uniform> >::iterator i = uniforms.begin();
     while (i != uniforms.end()) {
         ptr<Uniform> u = i->second;
-        u->program = owner;
-
         ptr<UniformSampler> us = u.cast<UniformSampler>();
         if (us != NULL) {
             uniformSamplers.push_back(us);
         }
+        u->program = owner;
         ++i;
     }
 
     map<string, ptr<UniformBlock> >::iterator k = uniformBlocks.begin();
     while (k != uniformBlocks.end()) {
         ptr<UniformBlock> b = k->second;
-        b->program = owner;
         if (b->buffer != NULL && b->isMapped()) {
             b->unmapBuffer();
         }
+        if (owner == NULL) {
+            b->setBuffer(NULL);
+        }
+        b->program = owner;
         map<string, ptr<Uniform> >::iterator i = b->uniforms.begin();
         while (i != b->uniforms.end()) {
             i->second->program = owner;
@@ -788,6 +1046,21 @@ void Program::updateUniforms(Program *owner)
     }
 }
 
+bool Program::isCurrent() const
+{
+    if (CURRENT != NULL) {
+        if (this == CURRENT) {
+            return true;
+        }
+        for (unsigned int i = 0; i < CURRENT->pipelinePrograms.size(); ++i) {
+            if (this == CURRENT->pipelinePrograms[i].get()) {
+                return true;
+            }
+        }
+    }
+    return false;
+}
+
 /// @cond RESOURCES
 
 class ProgramResource : public ResourceTemplate<30, Program>
@@ -799,6 +1072,17 @@ public:
         e = e == NULL ? desc->descriptor : e;
         vector< ptr<Module> > modules;
         checkParameters(desc, e, "name,");
+
+        if (desc->getData() != NULL) {
+            try {
+                init(*((int*) desc->getData()), desc->getSize() - 4, desc->getData() + 4, false);
+                desc->clearData();
+            } catch (...) {
+                desc->clearData();
+            }
+            return;
+        }
+
         const TiXmlNode *n = e->FirstChild();
         while (n != NULL) {
             const TiXmlElement *f = n->ToElement();
@@ -832,7 +1116,7 @@ public:
             }
             n = n->NextSibling();
         }
-        init(modules);
+        init(modules, false);
     }
 
     virtual bool prepareUpdate()
@@ -843,7 +1127,7 @@ public:
             changed = true;
         } else if (manager != NULL) {
             for (unsigned int i = 0; i < modules.size(); ++i) {
-                if (dynamic_cast<Resource*>(&(*modules[i]))->changed()) {
+                if (dynamic_cast<Resource*>(modules[i].get())->changed()) {
                     changed = true;
                     break;
                 }

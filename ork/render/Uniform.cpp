@@ -1,24 +1,42 @@
 /*
  * Ork: a small object-oriented OpenGL Rendering Kernel.
- * Copyright (c) 2008-2010 INRIA
+ * Website : http://ork.gforge.inria.fr/
+ * Copyright (c) 2008-2015 INRIA - LJK (CNRS - Grenoble University)
+ * All rights reserved.
+ * Redistribution and use in source and binary forms, with or without 
+ * modification, are permitted provided that the following conditions are met:
+ * 
+ * 1. Redistributions of source code must retain the above copyright notice, 
+ * this list of conditions and the following disclaimer.
+ * 
+ * 2. Redistributions in binary form must reproduce the above copyright notice, 
+ * this list of conditions and the following disclaimer in the documentation 
+ * and/or other materials provided with the distribution.
+ * 
+ * 3. Neither the name of the copyright holder nor the names of its contributors 
+ * may be used to endorse or promote products derived from this software without 
+ * specific prior written permission.
+ * 
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
+ * ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED 
+ * WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. 
+ * IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, 
+ * INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, 
+ * BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, 
+ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF 
+ * LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE 
+ * OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED 
+ * OF THE POSSIBILITY OF SUCH DAMAGE.
  *
- * This library is free software; you can redistribute it and/or modify it
- * under the terms of the GNU Lesser General Public License as published by
- * the Free Software Foundation; either version 3 of the License, or (at
- * your option) any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License
- * for more details.
- *
- * You should have received a copy of the GNU Lesser General Public License
- * along with this library; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301 USA.
  */
-
 /*
- * Authors: Eric Bruneton, Antoine Begault, Guillaume Piolat.
+ * Ork is distributed under the BSD3 Licence. 
+ * For any assistance, feedback and remarks, you can check out the 
+ * mailing list on the project page : 
+ * http://ork.gforge.inria.fr/
+ */
+/*
+ * Main authors: Eric Bruneton, Antoine Begault, Guillaume Piolat.
  */
 
 #include "ork/render/Uniform.h"
@@ -26,6 +44,8 @@
 #include <GL/glew.h>
 
 #include "ork/render/FrameBuffer.h"
+
+using namespace std;
 
 namespace ork
 {
@@ -57,7 +77,10 @@ void Uniform::setValueIfCurrent()
     if (block != NULL) {
         return;
     }
-    if (program == Program::CURRENT) {
+    if (program->isCurrent()) {
+        if (Program::CURRENT->pipelineId > 0) {
+            glActiveShaderProgram(Program::CURRENT->pipelineId, program->programId);
+        }
         setValue();
         dirty = false;
     } else {
@@ -523,7 +546,7 @@ ptr<Sampler> UniformSampler::getSampler() const
 void UniformSampler::setSampler(const ptr<Sampler> sampler)
 {
     this->sampler = sampler;
-    if (program != NULL && program == Program::CURRENT) {
+    if (program != NULL && program->isCurrent()) {
         setValue();
     }
 }
@@ -544,7 +567,7 @@ void UniformSampler::set(ptr<Texture> value)
         }
     }
     this->value = value;
-    if (program != NULL && program == Program::CURRENT) {
+    if (program != NULL && program->isCurrent()) {
         setValue();
     }
 }
@@ -558,11 +581,14 @@ void UniformSampler::setValue(ptr<Value> v)
 
 void UniformSampler::setValue()
 {
-    if (value != NULL && location != -1) {
-        GLint newUnit = value->bindToTextureUnit(sampler, program->getId());
+    if (value != NULL && location != -1 && Program::CURRENT != NULL) {
+        GLint newUnit = value->bindToTextureUnit(sampler, Program::CURRENT->programIds);
         assert(newUnit >= 0);
         if (newUnit != unit) {
 #ifdef ORK_NO_GLPROGRAMUNIFORM
+            if (Program::CURRENT->pipelineId > 0) {
+                glActiveShaderProgram(Program::CURRENT->pipelineId, program->programId);
+            }
             glUniform1i(location, newUnit);
 #else
             glProgramUniform1iEXT(program->getId(), location, newUnit);
@@ -570,7 +596,77 @@ void UniformSampler::setValue()
             assert(FrameBuffer::getError() == 0);
             unit = newUnit;
         }
+    } else {
+        unit = -1;
     }
+}
+
+// ----------------------------------------------------------------------------
+
+UniformSubroutine::UniformSubroutine(Program *program, Stage stage, const string &name, GLint location,
+    const vector<string> &compatibleSubroutineNames, const vector<GLint> &compatibleSubroutineIndices) :
+        Uniform("UniformSubroutine", program, NULL, name, location), stage(stage), value(0),
+        compatibleSubroutineNames(compatibleSubroutineNames), compatibleSubroutineIndices(compatibleSubroutineIndices)
+{
+}
+
+UniformSubroutine::~UniformSubroutine()
+{
+}
+
+UniformType UniformSubroutine::getType() const
+{
+    return SUBROUTINE;
+}
+
+Stage UniformSubroutine::getStage() const
+{
+    return stage;
+}
+
+vector<string> UniformSubroutine::getPossibleValues() const
+{
+    return compatibleSubroutineNames;
+}
+
+int UniformSubroutine::get()
+{
+    return value;
+}
+
+string UniformSubroutine::getSubroutine()
+{
+    return compatibleSubroutineNames[value];
+}
+
+void UniformSubroutine::set(int subroutine)
+{
+    value = subroutine;
+    if (program != NULL) {
+        program->uniformSubroutines[stage][location + 1] = compatibleSubroutineIndices[subroutine];
+        program->dirtyStages |= (1 << stage);
+    }
+}
+
+void UniformSubroutine::setSubroutine(const string &subroutine)
+{
+    for (unsigned int i = 0; i < compatibleSubroutineNames.size(); ++i) {
+        if (subroutine == compatibleSubroutineNames[i]) {
+            set(i);
+            return;
+        }
+    }
+    throw exception();
+}
+
+void UniformSubroutine::setValue(ptr<Value> v)
+{
+    setSubroutine(v.cast<ValueSubroutine>()->get());
+}
+
+void UniformSubroutine::setValue()
+{
+    // nothing to do (subroutines are set in Program::set)
 }
 
 // ----------------------------------------------------------------------------
@@ -595,7 +691,6 @@ UniformBlock::UniformBlock(Program *program, const string &name, GLuint index, G
 
 UniformBlock::~UniformBlock()
 {
-    setBuffer(NULL);
 }
 
 ptr<GPUBuffer> UniformBlock::newBuffer(string name)
@@ -627,6 +722,14 @@ ptr<Uniform> UniformBlock::getUniform(const string &name) const
 
 void UniformBlock::setBuffer(ptr<GPUBuffer> buffer)
 {
+    if (program != NULL) {
+        if (this->buffer != NULL) {
+            this->buffer->removeUser(program->getId());
+        }
+        if (buffer != NULL) {
+            buffer->addUser(program->getId());
+        }
+    }
     if (this->buffer != NULL && isMapped()) {
         unmapBuffer();
         ptr<UniformBlockBuffer> b = this->buffer.cast<UniformBlockBuffer>();

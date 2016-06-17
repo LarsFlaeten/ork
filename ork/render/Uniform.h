@@ -1,24 +1,42 @@
 /*
  * Ork: a small object-oriented OpenGL Rendering Kernel.
- * Copyright (c) 2008-2010 INRIA
+ * Website : http://ork.gforge.inria.fr/
+ * Copyright (c) 2008-2015 INRIA - LJK (CNRS - Grenoble University)
+ * All rights reserved.
+ * Redistribution and use in source and binary forms, with or without 
+ * modification, are permitted provided that the following conditions are met:
+ * 
+ * 1. Redistributions of source code must retain the above copyright notice, 
+ * this list of conditions and the following disclaimer.
+ * 
+ * 2. Redistributions in binary form must reproduce the above copyright notice, 
+ * this list of conditions and the following disclaimer in the documentation 
+ * and/or other materials provided with the distribution.
+ * 
+ * 3. Neither the name of the copyright holder nor the names of its contributors 
+ * may be used to endorse or promote products derived from this software without 
+ * specific prior written permission.
+ * 
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
+ * ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED 
+ * WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. 
+ * IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, 
+ * INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, 
+ * BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, 
+ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF 
+ * LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE 
+ * OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED 
+ * OF THE POSSIBILITY OF SUCH DAMAGE.
  *
- * This library is free software; you can redistribute it and/or modify it
- * under the terms of the GNU Lesser General Public License as published by
- * the Free Software Foundation; either version 3 of the License, or (at
- * your option) any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License
- * for more details.
- *
- * You should have received a copy of the GNU Lesser General Public License
- * along with this library; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301 USA.
  */
-
 /*
- * Authors: Eric Bruneton, Antoine Begault, Guillaume Piolat.
+ * Ork is distributed under the BSD3 Licence. 
+ * For any assistance, feedback and remarks, you can check out the 
+ * mailing list on the project page : 
+ * http://ork.gforge.inria.fr/
+ */
+/*
+ * Main authors: Eric Bruneton, Antoine Begault, Guillaume Piolat.
  */
 
 #ifndef _ORK_UNIFORM_H_
@@ -36,8 +54,6 @@
 #include "ork/render/GPUBuffer.h"
 #include "ork/render/Texture.h"
 #include "ork/render/Value.h"
-
-using namespace std;
 
 namespace ork
 {
@@ -77,7 +93,7 @@ public:
     /**
      * Returns the name of this uniform.
      */
-    string getName() const;
+    std::string getName() const;
 
     /**
      * Sets the value of this uniform.
@@ -101,7 +117,7 @@ protected:
     /**
      * The name of this uniform.
      */
-    string name;
+    std::string name;
 
     /**
      * The location of this uniform. For an uniform inside a block,
@@ -126,7 +142,7 @@ protected:
      * @param location the location of this uniform. For an uniform inside a
      *      block, this location is an offset inside the uniform block buffer.
      */
-    Uniform(const char *type, Program *program, UniformBlock *block, const string &name, GLint location);
+    Uniform(const char *type, Program *program, UniformBlock *block, const std::string &name, GLint location);
 
 #ifdef ORK_NO_GLPROGRAMUNIFORM
     /**
@@ -220,7 +236,7 @@ protected:
      * @param location the location of this uniform. For an uniform inside a
      *      block, this location is an offset inside the uniform block buffer.
      */
-    Uniform1(Program *program, UniformBlock *block, const string &name, GLint location) :
+    Uniform1(Program *program, UniformBlock *block, const std::string &name, GLint location) :
         Uniform(V, program, block, name, location)
     {
     }
@@ -349,7 +365,7 @@ protected:
      * @param location the location of this uniform. For an uniform inside a
      *      block, this location is an offset inside the uniform block buffer.
      */
-    Uniform2(Program *program, UniformBlock *block, const string &name, GLint location) :
+    Uniform2(Program *program, UniformBlock *block, const std::string &name, GLint location) :
         Uniform(V, program, block, name, location)
     {
     }
@@ -479,7 +495,7 @@ protected:
      * @param location the location of this uniform. For an uniform inside a
      *      block, this location is an offset inside the uniform block buffer.
      */
-    Uniform3(Program *program, UniformBlock *block, const string &name, GLint location) :
+    Uniform3(Program *program, UniformBlock *block, const std::string &name, GLint location) :
         Uniform(V, program, block, name, location)
     {
     }
@@ -610,7 +626,7 @@ protected:
      * @param location the location of this uniform. For an uniform inside a
      *      block, this location is an offset inside the uniform block buffer.
      */
-    Uniform4(Program *program, UniformBlock *block, const string &name, GLint location) :
+    Uniform4(Program *program, UniformBlock *block, const std::string &name, GLint location) :
         Uniform(V, program, block, name, location)
     {
     }
@@ -777,7 +793,7 @@ protected:
      * @param isRowMajor true if this uniform is stored in row major order
      *      in an uniform block.
      */
-    UniformMatrix(Program *program, UniformBlock *block, const string &name, GLint location, int stride, int isRowMajor) :
+    UniformMatrix(Program *program, UniformBlock *block, const std::string &name, GLint location, int stride, int isRowMajor) :
         Uniform(V, program, block, name, location), stride(stride), isRowMajor(isRowMajor)
     {
     }
@@ -843,7 +859,7 @@ protected:
      * @param isRowMajor true if this uniform is stored in row major order
      *      in an uniform block.
      */
-    UniformMatrix3(Program *program, UniformBlock *block, const string &name, GLint location, int stride, int isRowMajor) :
+    UniformMatrix3(Program *program, UniformBlock *block, const std::string &name, GLint location, int stride, int isRowMajor) :
         UniformMatrix<U, T, 3, 3, V, W>(program, block, name, location, stride, isRowMajor)
     {
     }
@@ -895,7 +911,7 @@ protected:
      * @param isRowMajor true if this uniform is stored in row major order
      *      in an uniform block.
      */
-    UniformMatrix4(Program *program, UniformBlock *block, const string &name, GLint location, int stride, int isRowMajor) :
+    UniformMatrix4(Program *program, UniformBlock *block, const std::string &name, GLint location, int stride, int isRowMajor) :
         UniformMatrix<U, T, 4, 4, V, W>(program, block, name, location, stride, isRowMajor)
     {
     }
@@ -1111,7 +1127,7 @@ protected:
      * @param location the location of this uniform. For an uniform inside a
      *      block, this location is an offset inside the uniform block buffer.
      */
-    UniformSampler(UniformType type, Program *program, UniformBlock *block, const string &name, GLint location);
+    UniformSampler(UniformType type, Program *program, UniformBlock *block, const std::string &name, GLint location);
 
     virtual void setValue();
 
@@ -1146,6 +1162,104 @@ private:
 // ----------------------------------------------------------------------------
 
 /**
+ * A Uniform holding a subroutine value.
+ */
+class ORK_API UniformSubroutine : public Uniform
+{
+public:
+    /**
+     * Deletes this uniform.
+     */
+    virtual ~UniformSubroutine();
+
+    virtual UniformType getType() const;
+
+    /**
+     * Returns the shader type to which this uniform subroutine belongs.
+     */
+    Stage getStage() const;
+
+    /**
+     * Returns the possible values for this uniform subroutine.
+     */
+    std::vector<std::string> getPossibleValues() const;
+
+    /**
+     * Returns the value of this uniform subroutine.
+     *
+     * @return the index of the subroutine name in #getPossibleValues.
+     */
+    int get();
+
+    /**
+     * Returns the value of this uniform subroutine.
+     *
+     * @return the subroutine name.
+     */
+    std::string getSubroutine();
+
+    /**
+     * Sets the value of this uniform subroutine.
+     *
+     * @param subroutine the index of a subroutine name in #getPossibleValues.
+     */
+    void set(int subroutine);
+
+    /**
+     * Sets the value of this uniform subroutine.
+     *
+     * @param subroutine a subroutine name.
+     */
+    void setSubroutine(const std::string &subroutine);
+
+    virtual void setValue(ptr<Value> v);
+
+protected:
+    virtual void setValue();
+
+private:
+    /**
+     * The shader type to which this uniform subroutine belongs.
+     */
+    Stage stage;
+
+    /**
+     * The index of the current subroutine name in #compatibleSubroutineNames.
+     */
+    GLint value;
+
+    /**
+     * The names of the possible subroutines for this uniform subroutine.
+     */
+    std::vector<std::string> compatibleSubroutineNames;
+
+    /**
+     * The OpenGL ids of the possible subroutines for this uniform subroutine.
+     */
+    std::vector<GLint> compatibleSubroutineIndices;
+
+    /**
+     * Creates a new uniform subroutine.
+     *
+     * @param program the Program to which this uniform belongs.
+     * @param stage the shader type to which this uniform subroutine belongs.
+     * @param name the name of the uniform in the GLSL shader code.
+     * @param location the location of this uniform. For an uniform inside a
+     *      block, this location is an offset inside the uniform block buffer.
+     * @param compatibleSubroutineNames the names of the possible subroutines
+     *      for this uniform subroutine.
+     * @param compatibleSubroutineIndices the OpenGL ids of the possible
+     *      subroutines for this uniform subroutine.
+     */
+    UniformSubroutine(Program *program, Stage stage, const std::string &name, GLint location,
+        const std::vector<std::string> &compatibleSubroutineNames, const std::vector<GLint> &compatibleSubroutineIndices);
+
+    friend class Program;
+};
+
+// ----------------------------------------------------------------------------
+
+/**
  * A named block of uniforms. The values of the uniforms in a uniform block are
  * stored in a GPUBuffer. Different Programs having identical uniform blocks have
  * different UniformBlock objects, but these objects can share the same GPUBuffer
@@ -1172,7 +1286,7 @@ public:
     /**
      * Returns the name of this uniform block.
      */
-    string getName() const;
+    std::string getName() const;
 
     /**
      * Returns the GPUBuffer that stores the values of the uniforms of this block.
@@ -1186,7 +1300,7 @@ public:
      * @return the uniform of this block whose name is given, or NULL if there
      *       is no such uniform.
      */
-    ptr<Uniform> getUniform(const string &name) const;
+    ptr<Uniform> getUniform(const std::string &name) const;
 
     /**
      * Returns the uniform1f of this block whose name is given.
@@ -1195,7 +1309,7 @@ public:
      * @return the uniform of this block whose name is given,
      *       or NULL if there is no such uniform.
      */
-    inline ptr<Uniform1f> getUniform1f(const string &name);
+    inline ptr<Uniform1f> getUniform1f(const std::string &name);
 
     /**
      * Returns the uniform1d of this block whose name is given.
@@ -1204,7 +1318,7 @@ public:
      * @return the uniform of this block whose name is given,
      *       or NULL if there is no such uniform.
      */
-    inline ptr<Uniform1d> getUniform1d(const string &name);
+    inline ptr<Uniform1d> getUniform1d(const std::string &name);
 
     /**
      * Returns the uniform1i of this block whose name is given.
@@ -1213,7 +1327,7 @@ public:
      * @return the uniform of this block whose name is given,
      *       or NULL if there is no such uniform.
      */
-    inline ptr<Uniform1i> getUniform1i(const string &name);
+    inline ptr<Uniform1i> getUniform1i(const std::string &name);
 
     /**
      * Returns the uniform1ui of this block whose name is given.
@@ -1222,7 +1336,7 @@ public:
      * @return the uniform of this block whose name is given,
      *       or NULL if there is no such uniform.
      */
-    inline ptr<Uniform1ui> getUniform1ui(const string &name);
+    inline ptr<Uniform1ui> getUniform1ui(const std::string &name);
 
     /**
      * Returns the uniform1b of this block whose name is given.
@@ -1231,7 +1345,7 @@ public:
      * @return the uniform of this block whose name is given,
      *       or NULL if there is no such uniform.
      */
-    inline ptr<Uniform1b> getUniform1b(const string &name);
+    inline ptr<Uniform1b> getUniform1b(const std::string &name);
 
     /**
      * Returns the uniform2f of this block whose name is given.
@@ -1240,7 +1354,7 @@ public:
      * @return the uniform of this block whose name is given,
      *       or NULL if there is no such uniform.
      */
-    inline ptr<Uniform2f> getUniform2f(const string &name);
+    inline ptr<Uniform2f> getUniform2f(const std::string &name);
 
     /**
      * Returns the uniform2d of this block whose name is given.
@@ -1249,7 +1363,7 @@ public:
      * @return the uniform of this block whose name is given,
      *       or NULL if there is no such uniform.
      */
-    inline ptr<Uniform2d> getUniform2d(const string &name);
+    inline ptr<Uniform2d> getUniform2d(const std::string &name);
 
     /**
      * Returns the uniform2i of this block whose name is given.
@@ -1258,7 +1372,7 @@ public:
      * @return the uniform of this block whose name is given,
      *       or NULL if there is no such uniform.
      */
-    inline ptr<Uniform2i> getUniform2i(const string &name);
+    inline ptr<Uniform2i> getUniform2i(const std::string &name);
 
     /**
      * Returns the uniform2ui of this block whose name is given.
@@ -1267,7 +1381,7 @@ public:
      * @return the uniform of this block whose name is given,
      *       or NULL if there is no such uniform.
      */
-    inline ptr<Uniform2ui> getUniform2ui(const string &name);
+    inline ptr<Uniform2ui> getUniform2ui(const std::string &name);
 
     /**
      * Returns the uniform2b of this block whose name is given.
@@ -1276,7 +1390,7 @@ public:
      * @return the uniform of this block whose name is given,
      *       or NULL if there is no such uniform.
      */
-    inline ptr<Uniform2b> getUniform2b(const string &name);
+    inline ptr<Uniform2b> getUniform2b(const std::string &name);
 
     /**
      * Returns the uniform3f of this block whose name is given.
@@ -1285,7 +1399,7 @@ public:
      * @return the uniform of this block whose name is given,
      *       or NULL if there is no such uniform.
      */
-    inline ptr<Uniform3f> getUniform3f(const string &name);
+    inline ptr<Uniform3f> getUniform3f(const std::string &name);
 
     /**
      * Returns the uniform3d of this block whose name is given.
@@ -1294,7 +1408,7 @@ public:
      * @return the uniform of this block whose name is given,
      *       or NULL if there is no such uniform.
      */
-    inline ptr<Uniform3d> getUniform3d(const string &name);
+    inline ptr<Uniform3d> getUniform3d(const std::string &name);
 
     /**
      * Returns the uniform3i of this block whose name is given.
@@ -1303,7 +1417,7 @@ public:
      * @return the uniform of this block whose name is given,
      *       or NULL if there is no such uniform.
      */
-    inline ptr<Uniform3i> getUniform3i(const string &name);
+    inline ptr<Uniform3i> getUniform3i(const std::string &name);
 
     /**
      * Returns the uniform3ui of this block whose name is given.
@@ -1312,7 +1426,7 @@ public:
      * @return the uniform of this block whose name is given,
      *       or NULL if there is no such uniform.
      */
-    inline ptr<Uniform3ui> getUniform3ui(const string &name);
+    inline ptr<Uniform3ui> getUniform3ui(const std::string &name);
 
     /**
      * Returns the uniform3b of this block whose name is given.
@@ -1321,7 +1435,7 @@ public:
      * @return the uniform of this block whose name is given,
      *       or NULL if there is no such uniform.
      */
-    inline ptr<Uniform3b> getUniform3b(const string &name);
+    inline ptr<Uniform3b> getUniform3b(const std::string &name);
 
     /**
      * Returns the uniform4f of this block whose name is given.
@@ -1330,7 +1444,7 @@ public:
      * @return the uniform of this block whose name is given,
      *       or NULL if there is no such uniform.
      */
-    inline ptr<Uniform4f> getUniform4f(const string &name);
+    inline ptr<Uniform4f> getUniform4f(const std::string &name);
 
     /**
      * Returns the uniform4d of this block whose name is given.
@@ -1339,7 +1453,7 @@ public:
      * @return the uniform of this block whose name is given,
      *       or NULL if there is no such uniform.
      */
-    inline ptr<Uniform4d> getUniform4d(const string &name);
+    inline ptr<Uniform4d> getUniform4d(const std::string &name);
 
     /**
      * Returns the uniform4i of this block whose name is given.
@@ -1348,7 +1462,7 @@ public:
      * @return the uniform of this block whose name is given,
      *       or NULL if there is no such uniform.
      */
-    inline ptr<Uniform4i> getUniform4i(const string &name);
+    inline ptr<Uniform4i> getUniform4i(const std::string &name);
 
     /**
      * Returns the uniform4ui of this block whose name is given.
@@ -1357,7 +1471,7 @@ public:
      * @return the uniform of this block whose name is given,
      *       or NULL if there is no such uniform.
      */
-    inline ptr<Uniform4ui> getUniform4ui(const string &name);
+    inline ptr<Uniform4ui> getUniform4ui(const std::string &name);
 
     /**
      * Returns the uniform4b of this block whose name is given.
@@ -1366,7 +1480,7 @@ public:
      * @return the uniform of this block whose name is given,
      *       or NULL if there is no such uniform.
      */
-    inline ptr<Uniform4b> getUniform4b(const string &name);
+    inline ptr<Uniform4b> getUniform4b(const std::string &name);
 
     /**
      * Returns the uniformMatrix2f of this block whose name is given.
@@ -1375,7 +1489,7 @@ public:
      * @return the uniform of this block whose name is given,
      *       or NULL if there is no such uniform.
      */
-    inline ptr<UniformMatrix2f> getUniformMatrix2f(const string &name);
+    inline ptr<UniformMatrix2f> getUniformMatrix2f(const std::string &name);
 
     /**
      * Returns the uniformMatrix2d of this block whose name is given.
@@ -1384,7 +1498,7 @@ public:
      * @return the uniform of this block whose name is given,
      *       or NULL if there is no such uniform.
      */
-    inline ptr<UniformMatrix2d> getUniformMatrix2d(const string &name);
+    inline ptr<UniformMatrix2d> getUniformMatrix2d(const std::string &name);
 
     /**
      * Returns the uniformMatrix3f of this block whose name is given.
@@ -1393,7 +1507,7 @@ public:
      * @return the uniform of this block whose name is given,
      *       or NULL if there is no such uniform.
      */
-    inline ptr<UniformMatrix3f> getUniformMatrix3f(const string &name);
+    inline ptr<UniformMatrix3f> getUniformMatrix3f(const std::string &name);
 
     /**
      * Returns the uniformMatrix3d of this block whose name is given.
@@ -1402,7 +1516,7 @@ public:
      * @return the uniform of this block whose name is given,
      *       or NULL if there is no such uniform.
      */
-    inline ptr<UniformMatrix3d> getUniformMatrix3d(const string &name);
+    inline ptr<UniformMatrix3d> getUniformMatrix3d(const std::string &name);
 
     /**
      * Returns the uniformMatrix4f of this block whose name is given.
@@ -1411,7 +1525,7 @@ public:
      * @return the uniform of this block whose name is given,
      *       or NULL if there is no such uniform.
      */
-    inline ptr<UniformMatrix4f> getUniformMatrix4f(const string &name);
+    inline ptr<UniformMatrix4f> getUniformMatrix4f(const std::string &name);
 
     /**
      * Returns the uniformMatrix4d of this block whose name is given.
@@ -1420,7 +1534,7 @@ public:
      * @return the uniform of this block whose name is given,
      *       or NULL if there is no such uniform.
      */
-    inline ptr<UniformMatrix4d> getUniformMatrix4d(const string &name);
+    inline ptr<UniformMatrix4d> getUniformMatrix4d(const std::string &name);
 
     /**
      * Returns the uniformMatrix2x3f of this block whose name is given.
@@ -1429,7 +1543,7 @@ public:
      * @return the uniform of this block whose name is given,
      *       or NULL if there is no such uniform.
      */
-    inline ptr<UniformMatrix2x3f> getUniformMatrix2x3f(const string &name);
+    inline ptr<UniformMatrix2x3f> getUniformMatrix2x3f(const std::string &name);
 
     /**
      * Returns the uniformMatrix2x3d of this block whose name is given.
@@ -1438,7 +1552,7 @@ public:
      * @return the uniform of this block whose name is given,
      *       or NULL if there is no such uniform.
      */
-    inline ptr<UniformMatrix2x3d> getUniformMatrix2x3d(const string &name);
+    inline ptr<UniformMatrix2x3d> getUniformMatrix2x3d(const std::string &name);
 
     /**
      * Returns the uniformMatrix2x4f of this block whose name is given.
@@ -1447,7 +1561,7 @@ public:
      * @return the uniform of this block whose name is given,
      *       or NULL if there is no such uniform.
      */
-    inline ptr<UniformMatrix2x4f> getUniformMatrix2x4f(const string &name);
+    inline ptr<UniformMatrix2x4f> getUniformMatrix2x4f(const std::string &name);
 
     /**
      * Returns the uniformMatrix2x4d of this block whose name is given.
@@ -1456,7 +1570,7 @@ public:
      * @return the uniform of this block whose name is given,
      *       or NULL if there is no such uniform.
      */
-    inline ptr<UniformMatrix2x4d> getUniformMatrix2x4d(const string &name);
+    inline ptr<UniformMatrix2x4d> getUniformMatrix2x4d(const std::string &name);
 
     /**
      * Returns the uniformMatrix3x2f of this block whose name is given.
@@ -1465,7 +1579,7 @@ public:
      * @return the uniform of this block whose name is given,
      *       or NULL if there is no such uniform.
      */
-    inline ptr<UniformMatrix3x2f> getUniformMatrix3x2f(const string &name);
+    inline ptr<UniformMatrix3x2f> getUniformMatrix3x2f(const std::string &name);
 
     /**
      * Returns the uniformMatrix3x2d of this block whose name is given.
@@ -1474,7 +1588,7 @@ public:
      * @return the uniform of this block whose name is given,
      *       or NULL if there is no such uniform.
      */
-    inline ptr<UniformMatrix3x2d> getUniformMatrix3x2d(const string &name);
+    inline ptr<UniformMatrix3x2d> getUniformMatrix3x2d(const std::string &name);
 
     /**
      * Returns the uniformMatrix3x4f of this block whose name is given.
@@ -1483,7 +1597,7 @@ public:
      * @return the uniform of this block whose name is given,
      *       or NULL if there is no such uniform.
      */
-    inline ptr<UniformMatrix3x4f> getUniformMatrix3x4f(const string &name);
+    inline ptr<UniformMatrix3x4f> getUniformMatrix3x4f(const std::string &name);
 
     /**
      * Returns the uniformMatrix3x4d of this block whose name is given.
@@ -1492,7 +1606,7 @@ public:
      * @return the uniform of this block whose name is given,
      *       or NULL if there is no such uniform.
      */
-    inline ptr<UniformMatrix3x4d> getUniformMatrix3x4d(const string &name);
+    inline ptr<UniformMatrix3x4d> getUniformMatrix3x4d(const std::string &name);
 
     /**
      * Returns the uniformMatrix4x2f of this block whose name is given.
@@ -1501,7 +1615,7 @@ public:
      * @return the uniform of this block whose name is given,
      *       or NULL if there is no such uniform.
      */
-    inline ptr<UniformMatrix4x2f> getUniformMatrix4x2f(const string &name);
+    inline ptr<UniformMatrix4x2f> getUniformMatrix4x2f(const std::string &name);
 
     /**
      * Returns the uniformMatrix4x2d of this block whose name is given.
@@ -1510,7 +1624,7 @@ public:
      * @return the uniform of this block whose name is given,
      *       or NULL if there is no such uniform.
      */
-    inline ptr<UniformMatrix4x2d> getUniformMatrix4x2d(const string &name);
+    inline ptr<UniformMatrix4x2d> getUniformMatrix4x2d(const std::string &name);
 
     /**
      * Returns the uniformMatrix4x3f of this block whose name is given.
@@ -1519,7 +1633,7 @@ public:
      * @return the uniform of this block whose name is given,
      *       or NULL if there is no such uniform.
      */
-    inline ptr<UniformMatrix4x3f> getUniformMatrix4x3f(const string &name);
+    inline ptr<UniformMatrix4x3f> getUniformMatrix4x3f(const std::string &name);
 
     /**
      * Returns the uniformMatrix4x2d of this block whose name is given.
@@ -1528,7 +1642,7 @@ public:
      * @return the uniform of this block whose name is given,
      *       or NULL if there is no such uniform.
      */
-    inline ptr<UniformMatrix4x3d> getUniformMatrix4x3d(const string &name);
+    inline ptr<UniformMatrix4x3d> getUniformMatrix4x3d(const std::string &name);
 
     /**
      * Returns the uniform sampler of this block whose name is given.
@@ -1537,7 +1651,7 @@ public:
      * @return the uniform of this block whose name is given,
      *       or NULL if there is no such uniform.
      */
-    inline ptr<UniformSampler> getUniformSampler(const string &name);
+    inline ptr<UniformSampler> getUniformSampler(const std::string &name);
 
     /**
      * Sets the GPUBuffer to store the values of the uniforms of this block.
@@ -1557,7 +1671,7 @@ protected:
     /**
      * The name of this uniform block.
      */
-    string name;
+    std::string name;
 
     /**
      * The index of this uniform block in its program.
@@ -1577,19 +1691,19 @@ protected:
     /**
      * The uniforms of this block.
      */
-    map<string, ptr<Uniform> > uniforms;
+    std::map< std::string, ptr<Uniform> > uniforms;
 
     /**
      * The buffers associated to each uniform blocks.
      * When creating a new uniform block, the user should check if a buffer was
      * already created for that UB name. Otherwise, he may create a new one.
      */
-    static static_ptr<Factory<string, ptr<GPUBuffer> > >buffers;
+    static static_ptr< Factory< std::string, ptr<GPUBuffer> > > buffers;
 
     /**
      * Callback method to create a new buffer. For use with #buffers.
      */
-    static ptr<GPUBuffer> newBuffer(string name);
+    static ptr<GPUBuffer> newBuffer(std::string name);
 
     /**
      * Creates a new uniform block.
@@ -1599,7 +1713,7 @@ protected:
      * @param index the index of this uniform block in its program.
      * @param size the minimum buffer size to store the uniforms of this block.
      */
-    UniformBlock(Program *program, const string &name, GLuint index, GLuint size);
+    UniformBlock(Program *program, const std::string &name, GLuint index, GLuint size);
 
     /**
      * Returns true if the GPUBuffer associated with this block is currently
@@ -1631,197 +1745,197 @@ protected:
     friend class Program;
 };
 
-inline ptr<Uniform1f> UniformBlock::getUniform1f(const string &name)
+inline ptr<Uniform1f> UniformBlock::getUniform1f(const std::string &name)
 {
     return getUniform(name).cast<Uniform1f>();
 }
 
-inline ptr<Uniform1d> UniformBlock::getUniform1d(const string &name)
+inline ptr<Uniform1d> UniformBlock::getUniform1d(const std::string &name)
 {
     return getUniform(name).cast<Uniform1d>();
 }
 
-inline ptr<Uniform1i> UniformBlock::getUniform1i(const string &name)
+inline ptr<Uniform1i> UniformBlock::getUniform1i(const std::string &name)
 {
     return getUniform(name).cast<Uniform1i>();
 }
 
-inline ptr<Uniform1ui> UniformBlock::getUniform1ui(const string &name)
+inline ptr<Uniform1ui> UniformBlock::getUniform1ui(const std::string &name)
 {
     return getUniform(name).cast<Uniform1ui>();
 }
 
-inline ptr<Uniform1b> UniformBlock::getUniform1b(const string &name)
+inline ptr<Uniform1b> UniformBlock::getUniform1b(const std::string &name)
 {
     return getUniform(name).cast<Uniform1b>();
 }
 
-inline ptr<Uniform2f> UniformBlock::getUniform2f(const string &name)
+inline ptr<Uniform2f> UniformBlock::getUniform2f(const std::string &name)
 {
     return getUniform(name).cast<Uniform2f>();
 }
 
-inline ptr<Uniform2d> UniformBlock::getUniform2d(const string &name)
+inline ptr<Uniform2d> UniformBlock::getUniform2d(const std::string &name)
 {
     return getUniform(name).cast<Uniform2d>();
 }
 
-inline ptr<Uniform2i> UniformBlock::getUniform2i(const string &name)
+inline ptr<Uniform2i> UniformBlock::getUniform2i(const std::string &name)
 {
     return getUniform(name).cast<Uniform2i>();
 }
 
-inline ptr<Uniform2ui> UniformBlock::getUniform2ui(const string &name)
+inline ptr<Uniform2ui> UniformBlock::getUniform2ui(const std::string &name)
 {
     return getUniform(name).cast<Uniform2ui>();
 }
 
-inline ptr<Uniform2b> UniformBlock::getUniform2b(const string &name)
+inline ptr<Uniform2b> UniformBlock::getUniform2b(const std::string &name)
 {
     return getUniform(name).cast<Uniform2b>();
 }
 
-inline ptr<Uniform3f> UniformBlock::getUniform3f(const string &name)
+inline ptr<Uniform3f> UniformBlock::getUniform3f(const std::string &name)
 {
     return getUniform(name).cast<Uniform3f>();
 }
 
-inline ptr<Uniform3d> UniformBlock::getUniform3d(const string &name)
+inline ptr<Uniform3d> UniformBlock::getUniform3d(const std::string &name)
 {
     return getUniform(name).cast<Uniform3d>();
 }
 
-inline ptr<Uniform3i> UniformBlock::getUniform3i(const string &name)
+inline ptr<Uniform3i> UniformBlock::getUniform3i(const std::string &name)
 {
     return getUniform(name).cast<Uniform3i>();
 }
 
-inline ptr<Uniform3ui> UniformBlock::getUniform3ui(const string &name)
+inline ptr<Uniform3ui> UniformBlock::getUniform3ui(const std::string &name)
 {
     return getUniform(name).cast<Uniform3ui>();
 }
 
-inline ptr<Uniform3b> UniformBlock::getUniform3b(const string &name)
+inline ptr<Uniform3b> UniformBlock::getUniform3b(const std::string &name)
 {
     return getUniform(name).cast<Uniform3b>();
 }
 
-inline ptr<Uniform4f> UniformBlock::getUniform4f(const string &name)
+inline ptr<Uniform4f> UniformBlock::getUniform4f(const std::string &name)
 {
     return getUniform(name).cast<Uniform4f>();
 }
 
-inline ptr<Uniform4d> UniformBlock::getUniform4d(const string &name)
+inline ptr<Uniform4d> UniformBlock::getUniform4d(const std::string &name)
 {
     return getUniform(name).cast<Uniform4d>();
 }
 
-inline ptr<Uniform4i> UniformBlock::getUniform4i(const string &name)
+inline ptr<Uniform4i> UniformBlock::getUniform4i(const std::string &name)
 {
     return getUniform(name).cast<Uniform4i>();
 }
 
-inline ptr<Uniform4ui> UniformBlock::getUniform4ui(const string &name)
+inline ptr<Uniform4ui> UniformBlock::getUniform4ui(const std::string &name)
 {
     return getUniform(name).cast<Uniform4ui>();
 }
 
-inline ptr<Uniform4b> UniformBlock::getUniform4b(const string &name)
+inline ptr<Uniform4b> UniformBlock::getUniform4b(const std::string &name)
 {
     return getUniform(name).cast<Uniform4b>();
 }
 
-inline ptr<UniformMatrix2f> UniformBlock::getUniformMatrix2f(const string &name)
+inline ptr<UniformMatrix2f> UniformBlock::getUniformMatrix2f(const std::string &name)
 {
     return getUniform(name).cast<UniformMatrix2f>();
 }
 
-inline ptr<UniformMatrix2d> UniformBlock::getUniformMatrix2d(const string &name)
+inline ptr<UniformMatrix2d> UniformBlock::getUniformMatrix2d(const std::string &name)
 {
     return getUniform(name).cast<UniformMatrix2d>();
 }
 
-inline ptr<UniformMatrix3f> UniformBlock::getUniformMatrix3f(const string &name)
+inline ptr<UniformMatrix3f> UniformBlock::getUniformMatrix3f(const std::string &name)
 {
     return getUniform(name).cast<UniformMatrix3f>();
 }
 
-inline ptr<UniformMatrix3d> UniformBlock::getUniformMatrix3d(const string &name)
+inline ptr<UniformMatrix3d> UniformBlock::getUniformMatrix3d(const std::string &name)
 {
     return getUniform(name).cast<UniformMatrix3d>();
 }
 
-inline ptr<UniformMatrix4f> UniformBlock::getUniformMatrix4f(const string &name)
+inline ptr<UniformMatrix4f> UniformBlock::getUniformMatrix4f(const std::string &name)
 {
     return getUniform(name).cast<UniformMatrix4f>();
 }
 
-inline ptr<UniformMatrix4d> UniformBlock::getUniformMatrix4d(const string &name)
+inline ptr<UniformMatrix4d> UniformBlock::getUniformMatrix4d(const std::string &name)
 {
     return getUniform(name).cast<UniformMatrix4d>();
 }
 
-inline ptr<UniformMatrix2x3f> UniformBlock::getUniformMatrix2x3f(const string &name)
+inline ptr<UniformMatrix2x3f> UniformBlock::getUniformMatrix2x3f(const std::string &name)
 {
     return getUniform(name).cast<UniformMatrix2x3f>();
 }
 
-inline ptr<UniformMatrix2x3d> UniformBlock::getUniformMatrix2x3d(const string &name)
+inline ptr<UniformMatrix2x3d> UniformBlock::getUniformMatrix2x3d(const std::string &name)
 {
     return getUniform(name).cast<UniformMatrix2x3d>();
 }
 
-inline ptr<UniformMatrix2x4f> UniformBlock::getUniformMatrix2x4f(const string &name)
+inline ptr<UniformMatrix2x4f> UniformBlock::getUniformMatrix2x4f(const std::string &name)
 {
     return getUniform(name).cast<UniformMatrix2x4f>();
 }
 
-inline ptr<UniformMatrix2x4d> UniformBlock::getUniformMatrix2x4d(const string &name)
+inline ptr<UniformMatrix2x4d> UniformBlock::getUniformMatrix2x4d(const std::string &name)
 {
     return getUniform(name).cast<UniformMatrix2x4d>();
 }
 
-inline ptr<UniformMatrix3x2f> UniformBlock::getUniformMatrix3x2f(const string &name)
+inline ptr<UniformMatrix3x2f> UniformBlock::getUniformMatrix3x2f(const std::string &name)
 {
     return getUniform(name).cast<UniformMatrix3x2f>();
 }
 
-inline ptr<UniformMatrix3x2d> UniformBlock::getUniformMatrix3x2d(const string &name)
+inline ptr<UniformMatrix3x2d> UniformBlock::getUniformMatrix3x2d(const std::string &name)
 {
     return getUniform(name).cast<UniformMatrix3x2d>();
 }
 
-inline ptr<UniformMatrix3x4f> UniformBlock::getUniformMatrix3x4f(const string &name)
+inline ptr<UniformMatrix3x4f> UniformBlock::getUniformMatrix3x4f(const std::string &name)
 {
     return getUniform(name).cast<UniformMatrix3x4f>();
 }
 
-inline ptr<UniformMatrix3x4d> UniformBlock::getUniformMatrix3x4d(const string &name)
+inline ptr<UniformMatrix3x4d> UniformBlock::getUniformMatrix3x4d(const std::string &name)
 {
     return getUniform(name).cast<UniformMatrix3x4d>();
 }
 
-inline ptr<UniformMatrix4x2f> UniformBlock::getUniformMatrix4x2f(const string &name)
+inline ptr<UniformMatrix4x2f> UniformBlock::getUniformMatrix4x2f(const std::string &name)
 {
     return getUniform(name).cast<UniformMatrix4x2f>();
 }
 
-inline ptr<UniformMatrix4x2d> UniformBlock::getUniformMatrix4x2d(const string &name)
+inline ptr<UniformMatrix4x2d> UniformBlock::getUniformMatrix4x2d(const std::string &name)
 {
     return getUniform(name).cast<UniformMatrix4x2d>();
 }
 
-inline ptr<UniformMatrix4x3f> UniformBlock::getUniformMatrix4x3f(const string &name)
+inline ptr<UniformMatrix4x3f> UniformBlock::getUniformMatrix4x3f(const std::string &name)
 {
     return getUniform(name).cast<UniformMatrix4x3f>();
 }
 
-inline ptr<UniformMatrix4x3d> UniformBlock::getUniformMatrix4x3d(const string &name)
+inline ptr<UniformMatrix4x3d> UniformBlock::getUniformMatrix4x3d(const std::string &name)
 {
     return getUniform(name).cast<UniformMatrix4x3d>();
 }
 
-inline ptr<UniformSampler> UniformBlock::getUniformSampler(const string &name)
+inline ptr<UniformSampler> UniformBlock::getUniformSampler(const std::string &name)
 {
     return getUniform(name).cast<UniformSampler>();
 }

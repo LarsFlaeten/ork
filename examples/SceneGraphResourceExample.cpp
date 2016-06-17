@@ -34,6 +34,7 @@
 
 #include "examples/Main.h"
 
+using namespace std;
 using namespace ork;
 
 class SceneGraphResourceExample : public GlutWindow

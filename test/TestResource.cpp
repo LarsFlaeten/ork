@@ -1,24 +1,42 @@
 /*
  * Ork: a small object-oriented OpenGL Rendering Kernel.
- * Copyright (c) 2008-2010 INRIA
+ * Website : http://ork.gforge.inria.fr/
+ * Copyright (c) 2008-2015 INRIA - LJK (CNRS - Grenoble University)
+ * All rights reserved.
+ * Redistribution and use in source and binary forms, with or without 
+ * modification, are permitted provided that the following conditions are met:
+ * 
+ * 1. Redistributions of source code must retain the above copyright notice, 
+ * this list of conditions and the following disclaimer.
+ * 
+ * 2. Redistributions in binary form must reproduce the above copyright notice, 
+ * this list of conditions and the following disclaimer in the documentation 
+ * and/or other materials provided with the distribution.
+ * 
+ * 3. Neither the name of the copyright holder nor the names of its contributors 
+ * may be used to endorse or promote products derived from this software without 
+ * specific prior written permission.
+ * 
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
+ * ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED 
+ * WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. 
+ * IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, 
+ * INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, 
+ * BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, 
+ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF 
+ * LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE 
+ * OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED 
+ * OF THE POSSIBILITY OF SUCH DAMAGE.
  *
- * This library is free software; you can redistribute it and/or modify it
- * under the terms of the GNU Lesser General Public License as published by
- * the Free Software Foundation; either version 3 of the License, or (at
- * your option) any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License
- * for more details.
- *
- * You should have received a copy of the GNU Lesser General Public License
- * along with this library; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301 USA.
  */
-
 /*
- * Authors: Eric Bruneton, Antoine Begault, Guillaume Piolat.
+ * Ork is distributed under the BSD3 Licence. 
+ * For any assistance, feedback and remarks, you can check out the 
+ * mailing list on the project page : 
+ * http://ork.gforge.inria.fr/
+ */
+/*
+ * Main authors: Eric Bruneton, Antoine Begault, Guillaume Piolat.
  */
 
 #include "test/Test.h"
@@ -27,6 +45,7 @@
 #include "ork/resource/ResourceManager.h"
 #include "ork/render/FrameBuffer.h"
 
+using namespace std;
 using namespace ork;
 
 ptr<FrameBuffer> getFrameBuffer(RenderBuffer::RenderBufferFormat f, int w, int h);
@@ -55,6 +74,36 @@ public:
         return loadResource(name);
     }
 };
+
+TEST(testModuleResource)
+{
+    createFile("test.glsl", "#ifdef _VERTEX_\nlayout(location=0) in vec4 p; out vec4 q; void main() { q = p; }\n#endif\n");
+    createFile("test.xml", "<?xml version=\"1.0\" ?>\n<module name=\"test\" version=\"330\" source=\"test.glsl\" feedback=\"interleaved\" varyings=\"q\"/>\n");
+    ptr<XMLResourceLoader> resLoader = new TestResourceLoader();
+    resLoader->addPath(".");
+    ptr<ResourceManager> resManager = new ResourceManager(resLoader);
+    ptr<Program> p = resManager->loadResource("test;").cast<Program>();
+    ptr<FrameBuffer> fb = getFrameBuffer(RenderBuffer::RGBA32F, 1, 1);
+    ptr< Mesh<vec4f, unsigned int> > pt = new Mesh<vec4f, unsigned int>(POINTS, GPU_STATIC);
+    pt->addAttributeType(0, 4, A32F, false);
+    pt->addVertex(vec4f(1.0, 2.0, 3.0, 4.0));
+    ptr<TransformFeedback> tfb = TransformFeedback::getDefault();
+    ptr<Query> q = new Query(PRIMITIVES_GENERATED);
+    ptr<GPUBuffer> b = new GPUBuffer();
+    b->setData(128, NULL, STREAM_COPY);
+    tfb->setVertexBuffer(0, b);
+    q->begin();
+    TransformFeedback::begin(fb, p, POINTS, tfb, false);
+    TransformFeedback::transform(*(pt->getBuffers()), 0, 1);
+    TransformFeedback::end();
+    q->end();
+    int n = q->getResult();
+    float data[4];
+    b->getSubData(0, 16, data);
+    ASSERT(data[0] == 1.0f && data[1] == 2.0f && data[2] == 3.0f && data[3] == 4.0f && n == 1);
+    remove("test.glsl");
+    remove("test.xml");
+}
 
 TEST(textureResourceUpdate)
 {
@@ -185,6 +234,39 @@ TEST(moduleResourceUpdateWithUniformSamplers)
     remove("test.glsl");
 }
 
+TEST4(moduleResourceUpdateWithUniformSubroutines)
+{
+    createFile("test.xml", "<?xml version=\"1.0\" ?>\n<module name=\"test\" version=\"400\" fragment=\"test.glsl\">\n<uniformSubroutine stage=\"FRAGMENT\" name=\"u\" subroutine=\"sr1\"/>\n</module>\n");
+    createFile("test.glsl", "layout(location=0) out ivec4 color;\nsubroutine int sr(int x);\nsubroutine (sr) int sr1(int x) { return x; }\nsubroutine (sr) int sr2(int x) { return x + 1; }\nsubroutine uniform sr u;\nvoid main() { color = ivec4(u(0)); }\n");
+
+    ptr<XMLResourceLoader> resLoader = new TestResourceLoader();
+    resLoader->addPath(".");
+    ptr<ResourceManager> resManager = new ResourceManager(resLoader);
+    ptr<Program> p = resManager->loadResource("test;").cast<Program>();
+    ptr<UniformSubroutine> u = p->getUniformSubroutine(FRAGMENT, "u");
+    u->setSubroutine("sr2");
+
+    ptr<FrameBuffer> fb = getFrameBuffer(RenderBuffer::RGB8UI, 1, 1);
+    int pixel1[3] = { 0, 0, 0 };
+    int pixel2[3] = { 0, 0, 0 };
+
+    fb->clear(true, true, true);
+    fb->drawQuad(p);
+    fb->readPixels(0, 0, 1, 1, RGB_INTEGER, INT, Buffer::Parameters(), CPUBuffer(&pixel1));
+
+    createFile("test.glsl", "layout(location=0) out ivec4 color;\nsubroutine int sr(int x);\nsubroutine (sr) int sr1(int x) { return x + 2; }\nsubroutine (sr) int sr2(int x) { return x + 3; }\nsubroutine uniform sr u;\nvoid main() { color = ivec4(u(0)); }\n");
+    resManager->updateResources();
+
+    fb->clear(true, true, true);
+    fb->drawQuad(p);
+    fb->readPixels(0, 0, 1, 1, RGB_INTEGER, INT, Buffer::Parameters(), CPUBuffer(&pixel2));
+
+    ASSERT(pixel1[0] == 1 && pixel2[0] == 3);
+
+    remove("test.xml");
+    remove("test.glsl");
+}
+
 TEST(moduleResourceUpdateRemovedUniform)
 {
     createFile("test.xml", "<?xml version=\"1.0\" ?>\n<module name=\"test\" version=\"330\" fragment=\"test.glsl\">\n<uniform1i name=\"u\" x=\"3\"/>\n</module>\n");
@@ -229,6 +311,55 @@ TEST(moduleResourceUpdateRemovedUniform)
     fb->readPixels(0, 0, 1, 1, RED_INTEGER, INT, Buffer::Parameters(), CPUBuffer(&pixel4));
 
     ASSERT(pixel1 == 1 && pixel2 == 2 && pixel3 == 3 && pixel4 == 4);
+
+    remove("test.xml");
+    remove("test.glsl");
+}
+
+TEST4(moduleResourceUpdateRemovedUniformSubroutine)
+{
+    createFile("test.xml", "<?xml version=\"1.0\" ?>\n<module name=\"test\" version=\"400\" fragment=\"test.glsl\">\n<uniformSubroutine stage=\"FRAGMENT\" name=\"u\" subroutine=\"sr1\"/>\n</module>\n");
+    createFile("test.glsl", "layout(location=0) out ivec4 color;\nsubroutine int sr(int x);\nsubroutine (sr) int sr1(int x) { return x; }\nsubroutine (sr) int sr2(int x) { return x + 1; }\nsubroutine uniform sr u;\nvoid main() { color = ivec4(u(0)); }\n");
+
+    ptr<XMLResourceLoader> resLoader = new TestResourceLoader();
+    resLoader->addPath(".");
+    ptr<ResourceManager> resManager = new ResourceManager(resLoader);
+    ptr<Program> p = resManager->loadResource("test;").cast<Program>();
+    ptr<UniformSubroutine> u = p->getUniformSubroutine(FRAGMENT, "u");
+
+    ptr<FrameBuffer> fb = getFrameBuffer(RenderBuffer::R32I, 1, 1);
+    int pixel1 = 0;
+    int pixel2 = 0;
+    int pixel3 = 0;
+    int pixel4 = 0;
+
+    u->setSubroutine("sr1");
+
+    fb->clear(true, true, true);
+    fb->drawQuad(p);
+    fb->readPixels(0, 0, 1, 1, RED_INTEGER, INT, Buffer::Parameters(), CPUBuffer(&pixel1));
+
+    createFile("test.glsl", "layout(location=0) out ivec4 color;\nvoid main() { color = ivec4(1); }\n");
+    resManager->updateResources();
+
+    fb->clear(true, true, true);
+    fb->drawQuad(p);
+    fb->readPixels(0, 0, 1, 1, RED_INTEGER, INT, Buffer::Parameters(), CPUBuffer(&pixel2));
+
+    createFile("test.glsl", "layout(location=0) out ivec4 color;\nsubroutine int sr(int x);\nsubroutine (sr) int sr1(int x) { return x; }\nsubroutine (sr) int sr2(int x) { return x + 1; }\nsubroutine uniform sr u;\nvoid main() { color = ivec4(u(0)); }\n");
+    resManager->updateResources();
+
+    fb->clear(true, true, true);
+    fb->drawQuad(p);
+    fb->readPixels(0, 0, 1, 1, RED_INTEGER, INT, Buffer::Parameters(), CPUBuffer(&pixel3));
+
+    u->setSubroutine("sr2");
+
+    fb->clear(true, true, true);
+    fb->drawQuad(p);
+    fb->readPixels(0, 0, 1, 1, RED_INTEGER, INT, Buffer::Parameters(), CPUBuffer(&pixel4));
+
+    ASSERT(pixel1 == 0 && pixel2 == 1 && pixel3 == 0 && pixel4 == 1);
 
     remove("test.xml");
     remove("test.glsl");

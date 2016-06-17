@@ -1,24 +1,42 @@
 /*
  * Ork: a small object-oriented OpenGL Rendering Kernel.
- * Copyright (c) 2008-2010 INRIA
+ * Website : http://ork.gforge.inria.fr/
+ * Copyright (c) 2008-2015 INRIA - LJK (CNRS - Grenoble University)
+ * All rights reserved.
+ * Redistribution and use in source and binary forms, with or without 
+ * modification, are permitted provided that the following conditions are met:
+ * 
+ * 1. Redistributions of source code must retain the above copyright notice, 
+ * this list of conditions and the following disclaimer.
+ * 
+ * 2. Redistributions in binary form must reproduce the above copyright notice, 
+ * this list of conditions and the following disclaimer in the documentation 
+ * and/or other materials provided with the distribution.
+ * 
+ * 3. Neither the name of the copyright holder nor the names of its contributors 
+ * may be used to endorse or promote products derived from this software without 
+ * specific prior written permission.
+ * 
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
+ * ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED 
+ * WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. 
+ * IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, 
+ * INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, 
+ * BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, 
+ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF 
+ * LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE 
+ * OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED 
+ * OF THE POSSIBILITY OF SUCH DAMAGE.
  *
- * This library is free software; you can redistribute it and/or modify it
- * under the terms of the GNU Lesser General Public License as published by
- * the Free Software Foundation; either version 3 of the License, or (at
- * your option) any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License
- * for more details.
- *
- * You should have received a copy of the GNU Lesser General Public License
- * along with this library; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301 USA.
  */
-
 /*
- * Authors: Eric Bruneton, Antoine Begault, Guillaume Piolat.
+ * Ork is distributed under the BSD3 Licence. 
+ * For any assistance, feedback and remarks, you can check out the 
+ * mailing list on the project page : 
+ * http://ork.gforge.inria.fr/
+ */
+/*
+ * Main authors: Eric Bruneton, Antoine Begault, Guillaume Piolat.
  */
 
 #ifndef _ORK_FRAME_BUFFER_H_
@@ -44,8 +62,6 @@
 #include "ork/render/TextureCubeArray.h"
 #include "ork/render/TextureRectangle.h"
 #include "ork/render/TransformFeedback.h"
-
-using namespace std;
 
 namespace ork
 {
@@ -79,6 +95,11 @@ public:
 
     private:
         /**
+         * True if several viewports are specified.
+         */
+        bool multiViewports;
+
+        /**
          * The viewport that defines the destination area for FrameBuffer#draw.
          * This value is specific to this framebuffer instance and is
          * automatically updated when the framebuffer is activated with
@@ -88,10 +109,25 @@ public:
         vec4<GLint> viewport;
 
         /**
+         * The viewports that define the destination areas for FrameBuffer#draw.
+         * This value is specific to this framebuffer instance and is
+         * automatically updated when the framebuffer is activated with
+         * FrameBuffer##set.
+         * (This corresponds to up, down, left and right planes).
+         */
+        vec4<GLfloat> viewports[16];
+
+        /**
          * The depth range that defines the destination area for #draw.
          * Contains far and near planes.
          */
         vec2<GLfloat> depthRange;
+
+        /**
+         * The depth ranges that define the destination areas for #draw.
+         * Contains far and near planes.
+         */
+        vec2<GLdouble> depthRanges[16];
 
         /**
          * Defines which planes must be used for clipping tests.
@@ -101,7 +137,8 @@ public:
         int clipDistances;
 
         /**
-         * A unique Id incremented each time viewport, depthrange or clipDistances change.
+         * A unique Id incremented each time multiViewports, viewport,
+         * viewports, depthRange depthRanges or clipDistances change.
          */
         int transformId;
 
@@ -283,15 +320,25 @@ public:
         // -------------
 
         /**
+         * True if separate scissor tests are used for each viewport.
+         */
+        bool multiScissor;
+
+        /**
          * If enabled, only the fragments inside #scissor will not be discarded.
          * If disabled, the scissor test always passes.
          */
-        bool enableScissor;
+        bool enableScissor[16];
 
         /**
-         * The viewport of the scissor test.
+         * The viewports of the scissor test.
          */
-        vec4<GLint> scissor;
+        vec4<GLint> scissor[16];
+
+        /**
+         * A unique ID incremented each time multiScissor, enableScissor, or scissor change.
+         */
+        int scissorId;
 
         // -------------
 
@@ -682,9 +729,19 @@ public:
     vec4<GLint> getViewport();
 
     /**
+     * Returns the viewport of this framebuffer whose index is given.
+     */
+    vec4<GLfloat> getViewport(int index);
+
+    /**
      * Returns this framebuffer's depth range.
      */
     vec2<GLfloat> getDepthRange();
+
+    /**
+     * Returns the depth range of this framebuffer whose index is given.
+     */
+    vec2<GLdouble> getDepthRange(int index);
 
     /**
      * Returns this framebuffer's clip distances mask.
@@ -787,16 +844,29 @@ public:
     ptr<Query> getOcclusionTest(QueryMode &occlusionMode);
 
     /**
-     * Returns True if Scissor test is enabled.
+     * Returns True if the scissor test is enabled.
      */
     bool getScissorTest();
 
     /**
-     * Returns True if Scissor test is enabled.
+     * Returns True if the scissor test is enabled for the given viewport.
+     */
+    bool getScissorTest(int index);
+
+    /**
+     * Returns true if the scissor test is enabled.
      *
      * @param[out] scissor the current scissor test viewport.
      */
     bool getScissorTest(vec4<GLint> &scissor);
+
+    /**
+     * Returns true if the scissor test is enabled for the given viewport.
+     *
+     * @param index a viewport index.
+     * @param[out] scissor the current scissor test viewport.
+     */
+    bool getScissorTest(int index, vec4<GLint> &scissor);
 
     /**
      * Returns true if stencil test is enabled.
@@ -878,7 +948,7 @@ public:
      * @param[out] dalpha the current destination alpha blending argument.
      */
     bool getBlend(BufferId buffer, BlendEquation &rgb, BlendArgument &srgb, BlendArgument &drgb,
-                  BlendEquation &alpha, BlendArgument &salpha, BlendArgument &dalpha);
+                                   BlendEquation &alpha, BlendArgument &salpha, BlendArgument &dalpha);
 
     /**
      * Returns the current blending color parameter.
@@ -932,12 +1002,29 @@ public:
     void setViewport(const vec4<GLint> &viewport);
 
     /**
+     * Sets a viewport for this framebuffer (up, down, left and right planes).
+     *
+     * @param index the viewport index.
+     * @param viewport the new viewport.
+     */
+    void setViewport(int index, const vec4<GLfloat> &viewport);
+
+    /**
      * Sets the depth range for this framebuffer (near and far planes).
      *
      * @param n near plane.
      * @param f far plane.
      */
     void setDepthRange(GLfloat n, GLfloat f);
+
+    /**
+     * Sets a depth range for this framebuffer (near and far planes).
+     *
+     * @param index the viewport index.
+     * @param n near plane.
+     * @param f far plane.
+     */
+    void setDepthRange(int index, GLdouble n, GLdouble f);
 
     /**
      * Sets the clipping bit, used to determine which planes will be used for clipping.
@@ -1050,9 +1137,19 @@ public:
     void setScissorTest(bool enableScissor);
 
     /**
+     * Enables or disables scissor test for the given viewport.
+     */
+    void setScissorTest(int index, bool enableScissor);
+
+    /**
      * Enables or disables scissor test.
      */
     void setScissorTest(bool enableScissor, const vec4<GLint> &scissor);
+
+    /**
+     * Enables or disables scissor test for the given viewport.
+     */
+    void setScissorTest(int index, bool enableScissor, const vec4<GLint> &scissor);
 
     /**
      * Enables or disables stencil test.
@@ -1073,7 +1170,7 @@ public:
      * @param dppass the stencil operation used when passing both stencil and depth tests on front or back faces.
      */
     void setStencilTest(bool enableStencil,
-                        Function f, GLint ref, GLuint mask, StencilOperation sfail, StencilOperation dpfail, StencilOperation dppass);
+        Function f, GLint ref, GLuint mask, StencilOperation sfail, StencilOperation dpfail, StencilOperation dppass);
 
     /**
      * Enables or disables stencil test.
@@ -1093,8 +1190,8 @@ public:
      * @param bdppass the stencil operation used when passing both stencil and depth tests on back faces.
      */
     void setStencilTest(bool enableStencil,
-                        Function ff, GLint fref, GLuint fmask, StencilOperation ffail, StencilOperation fdpfail, StencilOperation fdppass,
-                        Function bf, GLint bref, GLuint bmask, StencilOperation bfail, StencilOperation bdpfail, StencilOperation bdppass);
+        Function ff, GLint fref, GLuint fmask, StencilOperation ffail, StencilOperation fdpfail, StencilOperation fdppass,
+        Function bf, GLint bref, GLuint bmask, StencilOperation bfail, StencilOperation bdpfail, StencilOperation bdppass);
 
     /**
      * Enables or disables depth test.
@@ -1125,7 +1222,7 @@ public:
      * @param dst the destination color and alpha blending argument.
      */
     void setBlend(bool enableBlend,
-                  BlendEquation e, BlendArgument src, BlendArgument dst);
+        BlendEquation e, BlendArgument src, BlendArgument dst);
 
     /**
      * Enables or disables blending for a given buffer.
@@ -1137,7 +1234,7 @@ public:
      * @param dst the destination color and alpha blending argument.
      */
     void setBlend(BufferId buffer, bool enableBlend,
-                  BlendEquation e, BlendArgument src, BlendArgument dst);
+        BlendEquation e, BlendArgument src, BlendArgument dst);
 
     /**
      * Enables or disables blending.
@@ -1151,8 +1248,8 @@ public:
      * @param dalpha the destination alpha blending argument.
      */
     void setBlend(bool enableBlend,
-                  BlendEquation rgb, BlendArgument srgb, BlendArgument drgb,
-                  BlendEquation alpha, BlendArgument salpha, BlendArgument dalpha);
+        BlendEquation rgb, BlendArgument srgb, BlendArgument drgb,
+        BlendEquation alpha, BlendArgument salpha, BlendArgument dalpha);
 
     /**
      * Enables or disables blending for a given buffer.
@@ -1167,8 +1264,8 @@ public:
      * @param dalpha the destination alpha blending argument.
      */
     void setBlend(BufferId buffer, bool enableBlend,
-                  BlendEquation rgb, BlendArgument srgb, BlendArgument drgb,
-                  BlendEquation alpha, BlendArgument salpha, BlendArgument dalpha);
+        BlendEquation rgb, BlendArgument srgb, BlendArgument drgb,
+        BlendEquation alpha, BlendArgument salpha, BlendArgument dalpha);
 
     /**
      * Sets Blend color parameter.
@@ -1267,7 +1364,6 @@ public:
      * Only available with OpenGL 4.0 or more.
      *
      * @param p the program to use to draw the mesh.
-     * @param mesh the mesh to draw.
      * @param m how the mesh vertices must be interpreted.
      * @param buf a CPU or GPU buffer containing the 'count', 'primCount',
      *      'first' and 'base' parameters, in this order, followed by '0',
@@ -1276,15 +1372,16 @@ public:
     void drawIndirect(ptr<Program> p, const MeshBuffers &mesh, MeshMode m, const Buffer &buf);
 
     /**
-     * Draws the mesh resulting from a transform feedback session.
+     * Draws a mesh with a vertex count resulting from a transform feedback session.
      * Only available with OpenGL 4.0 or more.
      *
      * @param p the program to use to draw the mesh.
+     * @param mesh the mesh to draw.
      * @param m how the mesh vertices must be interpreted.
      * @param tfb a TransformFeedback containing the results of a transform feedback session.
      * @param stream the stream to draw.
      */
-    void drawFeedback(ptr<Program> p, MeshMode m, const TransformFeedback &tfb, int stream = 0);
+    void drawFeedback(ptr<Program> p, const MeshBuffers &mesh, MeshMode m, const TransformFeedback &tfb, int stream = 0);
 
     /**
      * Draws a quad mesh. This mesh has a position attribute made of four
@@ -1454,7 +1551,7 @@ private:
         {
         }
 
-        map< void*, ptr<FrameBuffer> > buffers;
+        std::map< void*, ptr<FrameBuffer> > buffers;
     };
 
     /**
@@ -1465,18 +1562,18 @@ private:
     /**
      * The attachments of this framebuffer.
      */
-    ptr<Object> textures[6];
+    ptr<Object> textures[10];
 
     /**
      * The levels specified for each attachments of this framebuffer.
      */
-    int levels[6];
+    int levels[10];
 
     /**
      * The layers specified for each attachments of this framebuffer. Only used for
      * Texture arrays, Texture Cube, and Texture 3D.
      */
-    int layers[6];
+    int layers[10];
 
     /**
      * True if #textures, #levels or #layers has changed since the last call to #set().
@@ -1496,7 +1593,7 @@ private:
     /**
      * The draw buffers.
      */
-    BufferId drawBuffers[4];
+    BufferId drawBuffers[8];
 
     /**
      * True if #readBuffer, #drawBufferCount or #drawBuffers has changed since

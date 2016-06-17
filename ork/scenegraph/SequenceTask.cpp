@@ -26,6 +26,8 @@
 #include "ork/taskgraph/TaskGraph.h"
 #include "ork/scenegraph/SceneManager.h"
 
+using namespace std;
+
 namespace ork
 {
 
@@ -86,7 +88,7 @@ public:
         ResourceTemplate<40, SequenceTask>(manager, name, desc)
     {
         e = e == NULL ? desc->descriptor : e;
-        checkParameters(desc, e, "");
+        checkParameters(desc, e, "name,");
         vector< ptr<TaskFactory> > subtasks;
         const TiXmlNode *n = e->FirstChild();
         while (n != NULL) {

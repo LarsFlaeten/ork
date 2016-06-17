@@ -1,24 +1,42 @@
 /*
  * Ork: a small object-oriented OpenGL Rendering Kernel.
- * Copyright (c) 2008-2010 INRIA
+ * Website : http://ork.gforge.inria.fr/
+ * Copyright (c) 2008-2015 INRIA - LJK (CNRS - Grenoble University)
+ * All rights reserved.
+ * Redistribution and use in source and binary forms, with or without 
+ * modification, are permitted provided that the following conditions are met:
+ * 
+ * 1. Redistributions of source code must retain the above copyright notice, 
+ * this list of conditions and the following disclaimer.
+ * 
+ * 2. Redistributions in binary form must reproduce the above copyright notice, 
+ * this list of conditions and the following disclaimer in the documentation 
+ * and/or other materials provided with the distribution.
+ * 
+ * 3. Neither the name of the copyright holder nor the names of its contributors 
+ * may be used to endorse or promote products derived from this software without 
+ * specific prior written permission.
+ * 
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
+ * ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED 
+ * WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. 
+ * IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, 
+ * INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, 
+ * BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, 
+ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF 
+ * LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE 
+ * OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED 
+ * OF THE POSSIBILITY OF SUCH DAMAGE.
  *
- * This library is free software; you can redistribute it and/or modify it
- * under the terms of the GNU Lesser General Public License as published by
- * the Free Software Foundation; either version 3 of the License, or (at
- * your option) any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License
- * for more details.
- *
- * You should have received a copy of the GNU Lesser General Public License
- * along with this library; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301 USA.
  */
-
 /*
- * Authors: Eric Bruneton, Antoine Begault, Guillaume Piolat.
+ * Ork is distributed under the BSD3 Licence. 
+ * For any assistance, feedback and remarks, you can check out the 
+ * mailing list on the project page : 
+ * http://ork.gforge.inria.fr/
+ */
+/*
+ * Main authors: Eric Bruneton, Antoine Begault, Guillaume Piolat.
  */
 
 #ifndef _ORK_ITERATOR_H_
@@ -26,8 +44,6 @@
 
 #include <set>
 #include <map>
-
-using namespace std;
 
 namespace ork
 {
@@ -48,7 +64,7 @@ public:
     /**
      * Creates a set iterator for the given set.
      */
-    SetIterator(set<type> &c);
+    SetIterator(std::set<type> &c);
 
     /**
      * Returns the size of the set for which this iterator has been created.
@@ -75,17 +91,17 @@ private:
     /**
      * The current iterator position.
      */
-    typename set<type>::iterator i;
+    typename std::set<type>::iterator i;
 
     /**
      * The iterator position corresponding to the end of the set.
      */
-    typename set<type>::iterator end;
+    typename std::set<type>::iterator end;
 
     /**
      * The empty set used for creating empty iterators.
      */
-    static set<type> emptySet;
+    static std::set<type> emptySet;
 };
 
 /**
@@ -104,7 +120,7 @@ public:
     /**
      * Creates a map iterator for the given map.
      */
-    MapIterator(map<key, type> &c);
+    MapIterator(std::map<key, type> &c);
 
     /**
      * Returns the size of the map for which this iterator has been created.
@@ -139,17 +155,17 @@ private:
     /**
      * The current iterator position.
      */
-    typename map<key,type>::iterator i;
+    typename std::map<key,type>::iterator i;
 
     /**
      * The iterator position corresponding to the end of the map.
      */
-    typename map<key,type>::iterator end;
+    typename std::map<key,type>::iterator end;
 
     /**
      * The empty map used for creating empty iterators.
      */
-    static map<key,type> emptyMap;
+    static std::map<key,type> emptyMap;
 };
 
 /**
@@ -168,13 +184,13 @@ public:
     /**
      * Creates a multimap iterator for the given multimap.
      */
-    MultiMapIterator(multimap<key, type> &c);
+    MultiMapIterator(std::multimap<key, type> &c);
 
     /**
      * Creates a multimap iterator for the values associated with the given key
      * in the given multimap.
      */
-    MultiMapIterator(key k, multimap<key, type> &c);
+    MultiMapIterator(key k, std::multimap<key, type> &c);
 
     /**
      * Returns the size of the multimap for which this iterator has been created.
@@ -207,17 +223,17 @@ private:
     /**
      * The current iterator position.
      */
-    typename multimap<key,type>::iterator i;
+    typename std::multimap<key,type>::iterator i;
 
     /**
      * The iterator position corresponding to the end of the multimap.
      */
-    typename multimap<key,type>::iterator end;
+    typename std::multimap<key,type>::iterator end;
 
     /**
      * The empty multimap used for creating empty iterators.
      */
-    static multimap<key,type> emptyMap;
+    static std::multimap<key,type> emptyMap;
 };
 
 template <typename type>
@@ -226,7 +242,7 @@ SetIterator<type>::SetIterator() : n(0), i(emptySet.begin()), end(emptySet.end()
 }
 
 template <typename type>
-SetIterator<type>::SetIterator(set<type> &c) : n((unsigned int)c.size()), i(c.begin()), end(c.end())
+SetIterator<type>::SetIterator(std::set<type> &c) : n((unsigned int)c.size()), i(c.begin()), end(c.end())
 {
 }
 
@@ -249,7 +265,7 @@ type SetIterator<type>::next()
 }
 
 template <typename type>
-set<type> SetIterator<type>::emptySet;
+std::set<type> SetIterator<type>::emptySet;
 
 template <typename key, typename type>
 MapIterator<key, type>::MapIterator() : n(0), i(emptyMap.begin()), end(emptyMap.end())
@@ -257,7 +273,7 @@ MapIterator<key, type>::MapIterator() : n(0), i(emptyMap.begin()), end(emptyMap.
 }
 
 template <typename key, typename type>
-MapIterator<key, type>::MapIterator(map<key, type> &c) : n((unsigned int)c.size()), i(c.begin()), end(c.end())
+MapIterator<key, type>::MapIterator(std::map<key, type> &c) : n((unsigned int)c.size()), i(c.begin()), end(c.end())
 {
 }
 
@@ -287,7 +303,7 @@ type MapIterator<key, type>::next(key &k)
 }
 
 template <typename key, typename type>
-map<key,type> MapIterator<key, type>::emptyMap;
+std::map<key,type> MapIterator<key, type>::emptyMap;
 
 template <typename key, typename type>
 MultiMapIterator<key, type>::MultiMapIterator() : n(0), i(emptyMap.begin()), end(emptyMap.end())
@@ -295,14 +311,14 @@ MultiMapIterator<key, type>::MultiMapIterator() : n(0), i(emptyMap.begin()), end
 }
 
 template <typename key, typename type>
-MultiMapIterator<key, type>::MultiMapIterator(multimap<key, type> &c) : n(c.size()), i(c.begin()), end(c.end())
+MultiMapIterator<key, type>::MultiMapIterator(std::multimap<key, type> &c) : n(c.size()), i(c.begin()), end(c.end())
 {
 }
 
 template <typename key, typename type>
-MultiMapIterator<key, type>::MultiMapIterator(key k, multimap<key, type> &c)
+MultiMapIterator<key, type>::MultiMapIterator(key k, std::multimap<key, type> &c)
 {
-    std::pair<typename multimap<key, type>::iterator, typename multimap<key, type>::iterator> p;
+    std::pair<typename std::multimap<key, type>::iterator, typename std::multimap<key, type>::iterator> p;
     p = c.equal_range(k);
     n = (unsigned int) c.count(k);
     i = p.first;
@@ -335,7 +351,7 @@ type MultiMapIterator<key, type>::next(key &k)
 }
 
 template <typename key, typename type>
-multimap<key,type> MultiMapIterator<key, type>::emptyMap;
+std::multimap<key,type> MultiMapIterator<key, type>::emptyMap;
 
 }
 

@@ -3,16 +3,16 @@
  * Copyright (c) 2008-2010 INRIA
  *
  * This library is free software; you can redistribute it and/or modify it
- * under the terms of the GNU Lesser General Public License as published by
+ * under the terms of the GNU std::lesser General Public License as published by
  * the Free Software Foundation; either version 3 of the License, or (at
  * your option) any later version.
  *
  * This library is distributed in the hope that it will be useful, but WITHOUT
  * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License
+ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU std::lesser General Public License
  * for more details.
  *
- * You should have received a copy of the GNU Lesser General Public License
+ * You should have received a copy of the GNU std::lesser General Public License
  * along with this library; if not, write to the Free Software Foundation,
  * Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301 USA.
  */
@@ -81,7 +81,7 @@ public:
      * or if there are several threads and gpuTasks is false. In addition,
      * if there is only one thread for cpu tasks, and for gpu tasks in all
      * cases, the curent number of prefetching tasks waiting for execution must
-     * be less than the prefetch queue size, otherwise this method returns false.
+     * be std::less than the prefetch queue size, otherwise this method returns false.
      */
     virtual bool supportsPrefetch(bool gpuTasks);
 
@@ -94,7 +94,7 @@ public:
     /**
      * Adds the given task type to the tasks whose execution times must be monitored (debug).
      */
-    void monitorTask(const string &taskType);
+    void monitorTask(const std::string &taskType);
 
 protected:
     /**
@@ -109,7 +109,7 @@ private:
      * A key to store tasks in a map. This key is made of the task deadline and
      * of its execution context.
      */
-    typedef pair<unsigned int, void*> taskKey;
+    typedef std::pair<unsigned int, void*> taskKey;
 
     /**
      * A sort operator for task keys. Task keys are sorted based on their
@@ -118,7 +118,7 @@ private:
      * executed first, while providing a grouping of tasks that share the same
      * the same execution context (which can save context switches).
      */
-    struct taskKeySort : public less<taskKey>
+    struct taskKeySort : public std::less<taskKey>
     {
         bool operator()(const taskKey &x, const taskKey &y) const;
     };
@@ -127,7 +127,7 @@ private:
      * A sort operator for tasks. This operator is based on the expected
      * duration of tasks, so that shorter tasks are executed first.
      */
-    struct taskSort : public less< ptr<Task> >
+    struct taskSort : public std::less< ptr<Task> >
     {
         bool operator()(const ptr<Task> x, const ptr<Task> y) const;
     };
@@ -136,7 +136,7 @@ private:
      * A sorted task set, where tasks are sorted based on their deadline,
      * execution context and expected duration.
      */
-    typedef map<taskKey, set<ptr<Task>, taskSort>, taskKeySort> SortedTaskSet;
+    typedef std::map<taskKey, std::set<ptr<Task>, taskSort>, taskKeySort> SortedTaskSet;
 
     /**
      * A mutex used to ensure consistent access to the data structures of this
@@ -159,7 +159,7 @@ private:
     /**
      * The threads used to execute tasks, in addition to the main thread.
      */
-    vector<void*> threads;
+    std::vector<void*> threads;
 
     /**
      * Target frame duration in micro seconds, or 0 if no fixed framerate.
@@ -200,7 +200,7 @@ private:
     /**
      * The primitive tasks that must be executed at the current frame.
      */
-    set< ptr<Task> > immediateTasks;
+    std::set< ptr<Task> > immediateTasks;
 
     /**
      * The primitive CPU or GPU tasks that are ready to be executed. A task is
@@ -217,29 +217,29 @@ private:
     /**
      * The predecessors of the tasks that remain to be executed.
      */
-    map< ptr<Task>, set< ptr<Task> > > dependencies;
+    std::map< ptr<Task>, std::set< ptr<Task> > > dependencies;
 
     /**
      * The successors of the tasks that remain to be executed.
      */
-    map< ptr<Task>, set< ptr<Task> > > inverseDependencies;
+    std::map< ptr<Task>, std::set< ptr<Task> > > inverseDependencies;
 
     /**
      * The prefetching tasks that remain to be executed.
      */
-    set< ptr<Task> > prefetchQueue;
+    std::set< ptr<Task> > prefetchQueue;
 
     /**
      * The task classes whose execution time must be monitored (debug).
      */
-    vector<string> monitoredTasks;
+    std::vector<std::string> monitoredTasks;
 
     /**
      * The statistics per frame for monitored task classes. For each frame and
      * for each task type, this map gives the number of tasks of this type that
      * have been executed, and the total execution time.
      */
-    map< string, pair<int, float> > frameStatistics;
+    std::map< std::string, std::pair<int, float> > frameStatistics;
 
     /**
      * Buffered array of frame statistics, to avoid writing them to disk at
@@ -268,7 +268,7 @@ private:
      * @param[in,out] addedTasks the already added tasks. This method adds the
      *      tasks it adds to this set.
      */
-    void addFlattenedTask(ptr<Task> t, set< ptr<Task> > &addedTasks);
+    void addFlattenedTask(ptr<Task> t, std::set< ptr<Task> > &addedTasks);
 
     /**
      * Adds all the primitive dependencies between the primitive first tasks of
@@ -281,7 +281,7 @@ private:
 
     /**
      * Sets the deadline of this task. This method ensures that the predecessors
-     * of this task, and so on recursively, have a deadline that is less than
+     * of this task, and so on recursively, have a deadline that is std::less than
      * the deadline of this task. This method also updates the sorted sets that
      * may contain this task, since the task order depends on the task deadline.
      *
@@ -289,7 +289,7 @@ private:
      * @param deadline the new deadline for this task.
      * @param visited a set of tasks already visited by this method.
      */
-    void setDeadline(ptr<Task> t, unsigned int deadline, set< ptr<Task> > &visited);
+    void setDeadline(ptr<Task> t, unsigned int deadline, std::set< ptr<Task> > &visited);
 
     /**
      * Updates the data structures after the execution of a task. This method

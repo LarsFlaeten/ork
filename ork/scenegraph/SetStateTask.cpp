@@ -1,24 +1,42 @@
 /*
  * Ork: a small object-oriented OpenGL Rendering Kernel.
- * Copyright (c) 2008-2010 INRIA
+ * Website : http://ork.gforge.inria.fr/
+ * Copyright (c) 2008-2015 INRIA - LJK (CNRS - Grenoble University)
+ * All rights reserved.
+ * Redistribution and use in source and binary forms, with or without 
+ * modification, are permitted provided that the following conditions are met:
+ * 
+ * 1. Redistributions of source code must retain the above copyright notice, 
+ * this list of conditions and the following disclaimer.
+ * 
+ * 2. Redistributions in binary form must reproduce the above copyright notice, 
+ * this list of conditions and the following disclaimer in the documentation 
+ * and/or other materials provided with the distribution.
+ * 
+ * 3. Neither the name of the copyright holder nor the names of its contributors 
+ * may be used to endorse or promote products derived from this software without 
+ * specific prior written permission.
+ * 
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
+ * ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED 
+ * WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. 
+ * IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, 
+ * INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, 
+ * BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, 
+ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF 
+ * LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE 
+ * OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED 
+ * OF THE POSSIBILITY OF SUCH DAMAGE.
  *
- * This library is free software; you can redistribute it and/or modify it
- * under the terms of the GNU Lesser General Public License as published by
- * the Free Software Foundation; either version 3 of the License, or (at
- * your option) any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License
- * for more details.
- *
- * You should have received a copy of the GNU Lesser General Public License
- * along with this library; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301 USA.
  */
-
 /*
- * Authors: Eric Bruneton, Antoine Begault, Guillaume Piolat.
+ * Ork is distributed under the BSD3 Licence. 
+ * For any assistance, feedback and remarks, you can check out the 
+ * mailing list on the project page : 
+ * http://ork.gforge.inria.fr/
+ */
+/*
+ * Main authors: Eric Bruneton, Antoine Begault, Guillaume Piolat.
  */
 
 #include "ork/scenegraph/SetStateTask.h"
@@ -26,6 +44,8 @@
 #include "ork/render/FrameBuffer.h"
 #include "ork/resource/ResourceTemplate.h"
 #include "ork/scenegraph/SceneManager.h"
+
+using namespace std;
 
 namespace ork
 {
@@ -41,6 +61,14 @@ BufferId getBufferFromName(const char *v) {
         return COLOR2;
     } else if (strcmp(v, "COLOR3") == 0) {
         return COLOR3;
+    } else if (strcmp(v, "COLOR4") == 0) {
+        return COLOR4;
+    } else if (strcmp(v, "COLOR5") == 0) {
+        return COLOR5;
+    } else if (strcmp(v, "COLOR6") == 0) {
+        return COLOR6;
+    } else if (strcmp(v, "COLOR7") == 0) {
+        return COLOR7;
     } else if (strcmp(v, "DEPTH") == 0) {
         return DEPTH;
     } else {
@@ -498,15 +526,16 @@ public:
         this->bfail = bfail;
         this->bdpfail = bdpfail;
         this->bdppass = bdppass;
-        assert(ff == -1 || (fref != -1 && ffail != -1 && fdpfail != -1 && fdppass != -1)); // checks that correct parameters are provided if a function is set
-        assert(bf == -1 || (bref != -1 && bfail != -1 && bdpfail != -1 && bdppass != -1));
+        // checks that correct parameters are provided if a function is set
+        assert(ff == (Function)-1 || (fref != (StencilOperation)-1 && ffail != (StencilOperation)-1 && fdpfail != (StencilOperation)-1 && fdppass != (StencilOperation)-1));
+        assert(bf == (Function)-1 || (bref != (StencilOperation)-1 && bfail != (StencilOperation)-1 && bdpfail != (StencilOperation)-1 && bdppass != (StencilOperation)-1));
     }
 
     virtual void run(ptr<FrameBuffer> fb)
     {
-        if (ff == -1 && bf == -1) {
+        if (ff == (Function)-1 && bf == (Function)-1) {
             fb->setStencilTest(enableStencil);
-        } else if (bf == -1) {
+        } else if (bf == (Function)-1) {
             fb->setStencilTest(enableStencil, ff, fref, fmask, ffail, fdpfail, fdppass);
         } else {
             fb->setStencilTest(enableStencil, ff, fref, fmask, ffail, fdpfail, fdppass, bf, bref, bmask, bfail, bdpfail, bdppass);
@@ -552,7 +581,7 @@ public:
 
     virtual void run(ptr<FrameBuffer> fb)
     {
-        if (depth == -1) {
+        if (depth == (Function) -1) {
             fb->setDepthTest(enableDepth);
         } else {
             fb->setDepthTest(enableDepth, depth);
@@ -579,21 +608,22 @@ public:
         this->drgb = dst;
         this->salpha = srcAlpha;
         this->dalpha = dstAlpha;
-        assert(e == -1 || (src != -1 && dst != -1)); // checks that src & dst arguments are set when the equations are set.
-        assert(eAlpha == -1 || (srcAlpha != -1 && dstAlpha != -1));
+        // checks that src & dst arguments are set when the equations are set.
+        assert(e == BlendEquation(-1) || (src != BlendArgument(-1) && dst != BlendArgument(-1)));
+        assert(eAlpha == BlendEquation(-1) || (srcAlpha != BlendArgument(-1) && dstAlpha != BlendArgument(-1)));
     }
 
     virtual void run(ptr<FrameBuffer> fb)
     {
-        if (rgb == -1 && buffer == -1) {
+        if (rgb == BlendEquation(-1) && buffer == BufferId(-1)) {
             fb->setBlend(enableBlend);
-        } else if (rgb == -1) {
+        } else if (rgb == BlendEquation(-1)) {
             fb->setBlend(buffer, enableBlend);
-        } else if (alpha == -1 && buffer == -1) {
+        } else if (alpha == BlendEquation(-1) && buffer == BufferId(-1)) {
             fb->setBlend(enableBlend, rgb, srgb, drgb);
-        } else if (alpha == -1) {
+        } else if (alpha == BlendEquation(-1)) {
             fb->setBlend(buffer, enableBlend, rgb, srgb, drgb);
-        } else if (buffer == -1) {
+        } else if (buffer == BufferId(-1)) {
             fb->setBlend(enableBlend, rgb, srgb, drgb, alpha, salpha, dalpha);
         } else {
             fb->setBlend(buffer, enableBlend, rgb, srgb, drgb, alpha, salpha, dalpha);
@@ -663,7 +693,7 @@ public:
 
     virtual void run(ptr<FrameBuffer> fb)
     {
-        if (logicOp == -1) {
+        if (logicOp == (LogicOperation)-1) {
             fb->setLogicOp(enableLogic);
         } else {
             fb->setLogicOp(enableLogic, logicOp);
@@ -690,7 +720,7 @@ public:
 
     virtual void run(ptr<FrameBuffer> fb)
     {
-        if (buffer != -1) {
+        if (buffer != BufferId(-1)) {
             fb->setColorMask(buffer, r, g, b, a);
         } else {
             fb->setColorMask(r, g, b, a);
@@ -780,11 +810,13 @@ public:
 
     virtual void run(ptr<FrameBuffer> fb)
     {
-        if (rb != -1) {
+        if (rb != BufferId(-1)) {
             fb->setReadBuffer(rb);
         }
-        if (db != -1) {
-            if (db == COLOR0 || db == COLOR1 || db == COLOR2 || db == COLOR3) {
+        if (db != BufferId(-1)) {
+            if (db == COLOR0 || db == COLOR1 || db == COLOR2 || db == COLOR3 ||
+                db == COLOR4 || db == COLOR5 || db == COLOR6 || db == COLOR7)
+            {
                 fb->setDrawBuffer(db);
             } else {
                 fb->setDrawBuffers(db);

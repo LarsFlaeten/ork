@@ -1,24 +1,42 @@
 /*
  * Ork: a small object-oriented OpenGL Rendering Kernel.
- * Copyright (c) 2008-2010 INRIA
+ * Website : http://ork.gforge.inria.fr/
+ * Copyright (c) 2008-2015 INRIA - LJK (CNRS - Grenoble University)
+ * All rights reserved.
+ * Redistribution and use in source and binary forms, with or without 
+ * modification, are permitted provided that the following conditions are met:
+ * 
+ * 1. Redistributions of source code must retain the above copyright notice, 
+ * this list of conditions and the following disclaimer.
+ * 
+ * 2. Redistributions in binary form must reproduce the above copyright notice, 
+ * this list of conditions and the following disclaimer in the documentation 
+ * and/or other materials provided with the distribution.
+ * 
+ * 3. Neither the name of the copyright holder nor the names of its contributors 
+ * may be used to endorse or promote products derived from this software without 
+ * specific prior written permission.
+ * 
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
+ * ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED 
+ * WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. 
+ * IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, 
+ * INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, 
+ * BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, 
+ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF 
+ * LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE 
+ * OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED 
+ * OF THE POSSIBILITY OF SUCH DAMAGE.
  *
- * This library is free software; you can redistribute it and/or modify it
- * under the terms of the GNU Lesser General Public License as published by
- * the Free Software Foundation; either version 3 of the License, or (at
- * your option) any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License
- * for more details.
- *
- * You should have received a copy of the GNU Lesser General Public License
- * along with this library; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301 USA.
  */
-
 /*
- * Authors: Eric Bruneton, Antoine Begault, Guillaume Piolat.
+ * Ork is distributed under the BSD3 Licence. 
+ * For any assistance, feedback and remarks, you can check out the 
+ * mailing list on the project page : 
+ * http://ork.gforge.inria.fr/
+ */
+/*
+ * Main authors: Eric Bruneton, Antoine Begault, Guillaume Piolat.
  */
 
 #ifndef _ORK_SCENE_MANAGER_H_
@@ -50,7 +68,7 @@ public:
     /**
      * An iterator over a map of SceneNode.
      */
-    typedef MultiMapIterator<string, ptr<SceneNode> > NodeIterator;
+    typedef MultiMapIterator<std::string, ptr<SceneNode> > NodeIterator;
 
     /**
      * Creates an empty SceneManager.
@@ -84,33 +102,33 @@ public:
      *
      * @param node a SceneNode flag that identifies the camera node.
      */
-    void setCameraNode(const string &node);
+    void setCameraNode(const std::string &node);
 
     /**
      * Returns the name of the camera node method to be called to draw the scene.
      */
-    string getCameraMethod();
+    std::string getCameraMethod();
 
     /**
      * Sets the name of the camera node method to be called to draw the scene.
      *
      * @param method a method name.
      */
-    void setCameraMethod(const string &method);
+    void setCameraMethod(const std::string &method);
 
     /**
      * Returns the nodes of the scene graph that have the given flag.
      *
      * @param flag a SceneNode flag.
      */
-    NodeIterator getNodes(const string &flag);
+    NodeIterator getNodes(const std::string &flag);
 
     /**
      * Returns the SceneNode currently bound to the given loop variable.
      *
      * @param name a loop variable.
      */
-    ptr<SceneNode> getNodeVar(const string &name);
+    ptr<SceneNode> getNodeVar(const std::string &name);
 
     /**
      * Sets the node currently bound to the given loop variable.
@@ -118,7 +136,7 @@ public:
      * @param name a loop variable.
      * @param node the new node bound to this loop variable.
      */
-    void setNodeVar(const string &name, ptr<SceneNode> node);
+    void setNodeVar(const std::string &name, ptr<SceneNode> node);
 
     /**
      * Returns the ResourceManager used to manage the resources of the scene
@@ -179,7 +197,7 @@ public:
      * @param b a bounding box, in the same reference frame as the frustum
      *     planes.
      */
-    static visibility getVisibility(const vec4d frustumPlanes[6], const box3d &b);
+    static visibility getVisibility(const vec4d *frustumPlanes, const box3d &b);
 
     /**
      * Returns the frustum plane equations from a projection matrix.
@@ -187,7 +205,7 @@ public:
      * @param toScreen a camera to screen projection matrix.
      * @param[out] frustumPlanes the frustum plane equations in camera space.
      */
-    static void getFrustumPlanes(const mat4d &toScreen, vec4d frustumPlanes[6]);
+    static void getFrustumPlanes(const mat4d &toScreen, vec4d *frustumPlanes);
 
     /**
      * Updates all the transformation matrices in the scene graph.
@@ -219,6 +237,16 @@ public:
      * is the one passed as argument to the last call to #update.
      */
     double getElapsedTime();
+
+    /**
+     * Returns the 3D coordinates in world space corresponding to the given
+     * screen space position.
+     *
+     * @param x horizontal screen position.
+     * @param y vertical screen position.
+     * @return ths 3D coordinates in world space corresponding to x,y
+     */
+    vec3d getWorldCoordinates(int x, int y);
 
 	/**
      * Returns the current FrameBuffer.
@@ -281,12 +309,12 @@ private:
     /**
      * The flag that identifies the camera node in the scene graph.
      */
-    string cameraNode;
+    std::string cameraNode;
 
     /**
      * The name of the camera node method to be called to draw the scene.
      */
-    string cameraMethod;
+    std::string cameraMethod;
 
     /**
      * The last task or task graph that was used to draw the scene.
@@ -296,12 +324,12 @@ private:
     /**
      * A multimap that associates to each flag all the nodes having this flag.
      */
-    multimap<string, ptr<SceneNode> > nodeMap;
+    std::multimap<std::string, ptr<SceneNode> > nodeMap;
 
     /**
      * A map that associates to each loop variable its current value.
      */
-    map<string, ptr<SceneNode> > nodeVariables;
+    std::map<std::string, ptr<SceneNode> > nodeVariables;
 
     /**
      * The ResourceManager that manages the resources of the scene graph.

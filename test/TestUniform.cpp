@@ -1,24 +1,42 @@
 /*
  * Ork: a small object-oriented OpenGL Rendering Kernel.
- * Copyright (c) 2008-2010 INRIA
+ * Website : http://ork.gforge.inria.fr/
+ * Copyright (c) 2008-2015 INRIA - LJK (CNRS - Grenoble University)
+ * All rights reserved.
+ * Redistribution and use in source and binary forms, with or without 
+ * modification, are permitted provided that the following conditions are met:
+ * 
+ * 1. Redistributions of source code must retain the above copyright notice, 
+ * this list of conditions and the following disclaimer.
+ * 
+ * 2. Redistributions in binary form must reproduce the above copyright notice, 
+ * this list of conditions and the following disclaimer in the documentation 
+ * and/or other materials provided with the distribution.
+ * 
+ * 3. Neither the name of the copyright holder nor the names of its contributors 
+ * may be used to endorse or promote products derived from this software without 
+ * specific prior written permission.
+ * 
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
+ * ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED 
+ * WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. 
+ * IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, 
+ * INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, 
+ * BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, 
+ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF 
+ * LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE 
+ * OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED 
+ * OF THE POSSIBILITY OF SUCH DAMAGE.
  *
- * This library is free software; you can redistribute it and/or modify it
- * under the terms of the GNU Lesser General Public License as published by
- * the Free Software Foundation; either version 3 of the License, or (at
- * your option) any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License
- * for more details.
- *
- * You should have received a copy of the GNU Lesser General Public License
- * along with this library; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301 USA.
  */
-
 /*
- * Authors: Eric Bruneton, Antoine Begault, Guillaume Piolat.
+ * Ork is distributed under the BSD3 Licence. 
+ * For any assistance, feedback and remarks, you can check out the 
+ * mailing list on the project page : 
+ * http://ork.gforge.inria.fr/
+ */
+/*
+ * Main authors: Eric Bruneton, Antoine Begault, Guillaume Piolat.
  */
 
 #include "test/Test.h"
@@ -396,3 +414,47 @@ TEST(testStructureArray1)
     fb->readPixels(0, 0, 1, 1, RGBA, FLOAT, Buffer::Parameters(), CPUBuffer(&pixels));
     ASSERT(pixels[0] == 1.0f && pixels[1] == 2.0f && pixels[2] == 3.0f && pixels[3] == 6.0f);
 }
+
+// ----------------------------------------------------------------------------
+// SUBROUTINES
+// ----------------------------------------------------------------------------
+
+TEST4(testSubroutine1)
+{
+    ptr<FrameBuffer> fb = getFrameBuffer(RenderBuffer::R32F, 1, 1);
+    ptr<Program> p = new Program(new Module(400, NULL, "\
+        subroutine float sr(float x);\n\
+        subroutine (sr) float sr1(float x) { return x; }\n\
+        subroutine (sr) float sr2(float x) { return x + 1.0f; }\n\
+        subroutine uniform sr f;\n\
+        layout(location=0) out vec4 color;\n\
+        void main() { color = vec4(f(1.0), 0.0, 0.0, 0.0); }\n"));
+    p->getUniformSubroutine(FRAGMENT, "f")->setSubroutine("sr1");
+    GLfloat pixels1[4];
+    fb->drawQuad(p);
+    fb->readPixels(0, 0, 1, 1, RGBA, FLOAT, Buffer::Parameters(), CPUBuffer(&pixels1));
+    p->getUniformSubroutine(FRAGMENT, "f")->setSubroutine("sr2");
+    GLfloat pixels2[4];
+    fb->drawQuad(p);
+    fb->readPixels(0, 0, 1, 1, RGBA, FLOAT, Buffer::Parameters(), CPUBuffer(&pixels2));
+    ASSERT(pixels1[0] == 1.0f && pixels2[0] == 2.0f);
+}
+
+TEST4(testSubroutine2)
+{
+    ptr<FrameBuffer> fb = getFrameBuffer(RenderBuffer::RG32F, 1, 1);
+    ptr<Program> p = new Program(new Module(400, NULL, "\
+        subroutine float sr(float x);\n\
+        subroutine (sr) float sr1(float x) { return x; }\n\
+        subroutine (sr) float sr2(float x) { return x + 1.0f; }\n\
+        subroutine uniform sr f[2];\n\
+        layout(location=0) out vec4 color;\n\
+        void main() { color = vec4(f[0](1.0), f[1](1.0), 0.0, 0.0); }\n"));
+    p->getUniformSubroutine(FRAGMENT, "f[0]")->setSubroutine("sr1");
+    p->getUniformSubroutine(FRAGMENT, "f[1]")->setSubroutine("sr2");
+    GLfloat pixels[4];
+    fb->drawQuad(p);
+    fb->readPixels(0, 0, 1, 1, RGBA, FLOAT, Buffer::Parameters(), CPUBuffer(&pixels));
+    ASSERT(pixels[0] == 1.0f && pixels[1] == 2.0f);
+}
+

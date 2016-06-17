@@ -1,24 +1,42 @@
 /*
  * Ork: a small object-oriented OpenGL Rendering Kernel.
- * Copyright (c) 2008-2010 INRIA
+ * Website : http://ork.gforge.inria.fr/
+ * Copyright (c) 2008-2015 INRIA - LJK (CNRS - Grenoble University)
+ * All rights reserved.
+ * Redistribution and use in source and binary forms, with or without 
+ * modification, are permitted provided that the following conditions are met:
+ * 
+ * 1. Redistributions of source code must retain the above copyright notice, 
+ * this list of conditions and the following disclaimer.
+ * 
+ * 2. Redistributions in binary form must reproduce the above copyright notice, 
+ * this list of conditions and the following disclaimer in the documentation 
+ * and/or other materials provided with the distribution.
+ * 
+ * 3. Neither the name of the copyright holder nor the names of its contributors 
+ * may be used to endorse or promote products derived from this software without 
+ * specific prior written permission.
+ * 
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
+ * ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED 
+ * WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. 
+ * IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, 
+ * INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, 
+ * BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, 
+ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF 
+ * LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE 
+ * OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED 
+ * OF THE POSSIBILITY OF SUCH DAMAGE.
  *
- * This library is free software; you can redistribute it and/or modify it
- * under the terms of the GNU Lesser General Public License as published by
- * the Free Software Foundation; either version 3 of the License, or (at
- * your option) any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License
- * for more details.
- *
- * You should have received a copy of the GNU Lesser General Public License
- * along with this library; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301 USA.
  */
-
 /*
- * Authors: Eric Bruneton, Antoine Begault, Guillaume Piolat.
+ * Ork is distributed under the BSD3 Licence. 
+ * For any assistance, feedback and remarks, you can check out the 
+ * mailing list on the project page : 
+ * http://ork.gforge.inria.fr/
+ */
+/*
+ * Main authors: Eric Bruneton, Antoine Begault, Guillaume Piolat.
  */
 
 #include "ork/render/FrameBuffer.h"
@@ -35,6 +53,8 @@
 #include "ork/core/Logger.h"
 #include "ork/render/Module.h"
 #include "ork/render/Texture.h"
+
+using namespace std;
 
 inline void glEnable(GLenum p, bool b)
 {
@@ -156,7 +176,7 @@ void checkExtensions()
 }
 
 FrameBuffer::Parameters::Parameters() :
-    viewport(0, 0, 0, 0), depthRange(0.0f, 1.0f), clipDistances(0), transformId(0),
+    multiViewports(false), viewport(0, 0, 0, 0), depthRange(0.0f, 1.0f), clipDistances(0), transformId(0),
     clearColor(0.0f, 0.0f, 0.0f, 0.0f), clearDepth(1.0f), clearStencil(0), clearId(0),
     pointSize(1.0f), pointFadeThresholdSize(1.0f), pointLowerLeftOrigin(false), pointId(0),
     lineWidth(1.0f), lineSmooth(false),
@@ -165,7 +185,7 @@ FrameBuffer::Parameters::Parameters() :
     multiSample(true), sampleAlphaToCoverage(false), sampleAlphaToOne(false),
         sampleCoverage(1.0f), sampleMask(0xFFFFFFFF), multiSampleId(0),
     occlusionQuery(NULL), occlusionMode(WAIT),
-    enableScissor(false), scissor(0, 0, 0, 0),
+    multiScissor(false), scissorId(0),
     enableStencil(false), ffunc(ALWAYS), fref(0), fmask(0xFFFFFFFF), ffail(KEEP), fdpfail(KEEP), fdppass(KEEP),
         bfunc(ALWAYS), bref(0), bmask(0xFFFFFFFF), bfail(KEEP), bdpfail(KEEP), bdppass(KEEP), stencilId(0),
     enableDepth(false), depth(LESS),
@@ -174,6 +194,8 @@ FrameBuffer::Parameters::Parameters() :
     enableLogic(false), logicOp(COPY),
     multiColorMask(false), depthMask(true), stencilMaskFront(0xFFFFFFFF), stencilMaskBack(0xFFFFFFFF), maskId(0)
 {
+    enableScissor[0] = false;
+    scissor[0] = vec4<GLint>(0, 0, 0, 0);
     for (int i = 0; i < 4; ++i) {
         enableBlend[i] = false;
         rgb[i] = ADD;
@@ -197,8 +219,15 @@ void FrameBuffer::Parameters::set(const Parameters &p)
     // TRANSFORM -------------
     if (transformId != p.transformId)
     {
-        glViewport(p.viewport.x, p.viewport.y, p.viewport.z, p.viewport.w);
-        glDepthRange(p.depthRange.x, p.depthRange.y);
+        if (p.multiViewports) {
+            for (int i = 0; i < 16; ++i) {
+                glViewportIndexedf(i, p.viewports[i].x, p.viewports[i].y, p.viewports[i].z, p.viewports[i].w);
+                glDepthRangeIndexed(i, p.depthRanges[i].x, p.depthRanges[i].y);
+            }
+        } else {
+            glViewport(p.viewport.x, p.viewport.y, p.viewport.z, p.viewport.w);
+            glDepthRange(p.depthRange.x, p.depthRange.y);
+        }
         for (int i = 0; i < 6; ++i) {
             glEnable(GL_CLIP_DISTANCE0 + i, (p.clipDistances & (1 << i)) != 0);
         }
@@ -291,11 +320,21 @@ void FrameBuffer::Parameters::set(const Parameters &p)
         }
     }
     // SCISSOR TEST -------------
-    if (enableScissor != p.enableScissor ||
-        scissor != p.scissor)
+    if (scissorId != p.scissorId)
     {
-        glEnable(GL_SCISSOR_TEST, p.enableScissor);
-        glScissor(p.scissor.x, p.scissor.y, p.scissor.z, p.scissor.w);
+        if (p.multiScissor) {
+            for (int i = 0; i < 16; ++i) {
+                if (p.enableScissor[i]) {
+                    glEnablei(i, GL_SCISSOR_TEST);
+                } else {
+                    glDisablei(i, GL_SCISSOR_TEST);
+                }
+                glScissorIndexed(i, p.scissor[i].x, p.scissor[i].y, p.scissor[i].z, p.scissor[i].w);
+            }
+        } else {
+            glEnable(GL_SCISSOR_TEST, p.enableScissor[0]);
+            glScissor(p.scissor[0].x, p.scissor[0].y, p.scissor[0].z, p.scissor[0].w);
+        }
     }
     // STENCIL TEST -------------
     if (stencilId != p.stencilId)
@@ -375,7 +414,7 @@ FrameBuffer::FrameBuffer() : Object("FrameBuffer"),
     glGenFramebuffers(1, &framebufferId);
     assert(getError() == 0);
 
-    for (int i = 0; i < 6; ++i) {
+    for (int i = 0; i < 10; ++i) {
         textures[i] = NULL;
         levels[i] = 0;
         layers[i] = 0;
@@ -574,6 +613,18 @@ void FrameBuffer::setDrawBuffers(BufferId b)
     if ((b & COLOR3) != 0) {
         drawBuffers[drawBufferCount++] = COLOR3;
     }
+    if ((b & COLOR4) != 0) {
+        drawBuffers[drawBufferCount++] = COLOR4;
+    }
+    if ((b & COLOR5) != 0) {
+        drawBuffers[drawBufferCount++] = COLOR5;
+    }
+    if ((b & COLOR6) != 0) {
+        drawBuffers[drawBufferCount++] = COLOR6;
+    }
+    if ((b & COLOR7) != 0) {
+        drawBuffers[drawBufferCount++] = COLOR7;
+    }
     readDrawChanged = true;
 }
 
@@ -587,9 +638,29 @@ vec4<GLint> FrameBuffer::getViewport()
     return parameters.viewport;
 }
 
+vec4<GLfloat> FrameBuffer::getViewport(int index)
+{
+    assert(index >= 0 && index < 16);
+    if (parameters.multiViewports) {
+        return parameters.viewports[index];
+    } else {
+        return parameters.viewport.cast<GLfloat>();
+    }
+}
+
 vec2<GLfloat> FrameBuffer::getDepthRange()
 {
     return parameters.depthRange;
+}
+
+vec2<GLdouble> FrameBuffer::getDepthRange(int index)
+{
+    assert(index >= 0 && index < 16);
+    if (parameters.multiViewports) {
+        return parameters.depthRanges[index];
+    } else {
+        return parameters.depthRange.cast<GLdouble>();
+    }
 }
 
 GLint FrameBuffer::getClipDistances()
@@ -696,13 +767,26 @@ ptr<Query> FrameBuffer::getOcclusionTest(QueryMode &occlusionMode)
 
 bool FrameBuffer::getScissorTest()
 {
-    return parameters.enableScissor;
+    return parameters.enableScissor[0];
+}
+
+bool FrameBuffer::getScissorTest(int index)
+{
+    assert(index >=0 && index < 16);
+    return parameters.enableScissor[index];
 }
 
 bool FrameBuffer::getScissorTest(vec4<GLint> &scissor)
 {
-    scissor = parameters.scissor;
-    return parameters.enableScissor;
+    scissor = parameters.scissor[0];
+    return parameters.enableScissor[0];
+}
+
+bool FrameBuffer::getScissorTest(int index, vec4<GLint> &scissor)
+{
+    assert(index >=0 && index < 16);
+    scissor = parameters.scissor[index];
+    return parameters.enableScissor[index];
 }
 
 bool FrameBuffer::getStencilTest()
@@ -824,14 +908,44 @@ void FrameBuffer::setParameters(const Parameters &p)
 
 void FrameBuffer::setViewport(const vec4<GLint> &viewport)
 {
+    parameters.multiViewports = false;
     parameters.viewport = viewport;
+    parameters.transformId = ++PARAMETER_ID;
+    parametersChanged = true;
+}
+
+void FrameBuffer::setViewport(int index, const vec4<GLfloat> &viewport)
+{
+    if (!parameters.multiViewports) {
+        for (int i = 0; i < 16; ++i) {
+            parameters.viewports[i] = parameters.viewport.cast<GLfloat>();
+            parameters.depthRanges[i] = parameters.depthRange.cast<GLdouble>();
+        }
+        parameters.multiViewports = true;
+    }
+    parameters.viewports[index] = viewport;
     parameters.transformId = ++PARAMETER_ID;
     parametersChanged = true;
 }
 
 void FrameBuffer::setDepthRange(GLfloat n, GLfloat f)
 {
+    parameters.multiViewports = false;
     parameters.depthRange = vec2<GLfloat>(n, f);
+    parameters.transformId = ++PARAMETER_ID;
+    parametersChanged = true;
+}
+
+void FrameBuffer::setDepthRange(int index, GLdouble n, GLdouble f)
+{
+    if (!parameters.multiViewports) {
+        for (int i = 0; i < 16; ++i) {
+            parameters.viewports[i] = parameters.viewport.cast<GLfloat>();
+            parameters.depthRanges[i] = parameters.depthRange.cast<GLdouble>();
+        }
+        parameters.multiViewports = true;
+    }
+    parameters.depthRanges[index] = vec2<GLdouble>(n, f);
     parameters.transformId = ++PARAMETER_ID;
     parametersChanged = true;
 }
@@ -982,14 +1096,47 @@ void FrameBuffer::setOcclusionTest(ptr<Query> occlusionQuery, QueryMode occlusio
 
 void FrameBuffer::setScissorTest(bool enableScissor)
 {
-    parameters.enableScissor = enableScissor;
+    parameters.multiScissor = false;
+    parameters.enableScissor[0] = enableScissor;
+    parameters.scissorId = ++PARAMETER_ID;
+    parametersChanged = true;
+}
+
+void FrameBuffer::setScissorTest(int index, bool enableScissor)
+{
+    if (!parameters.multiScissor) {
+        for (int i = 1; i < 16; ++i) {
+            parameters.enableScissor[i] = parameters.enableScissor[0];
+            parameters.scissor[i] = parameters.scissor[0];
+        }
+        parameters.multiScissor = true;
+    }
+    parameters.enableScissor[index] = enableScissor;
+    parameters.scissorId = ++PARAMETER_ID;
     parametersChanged = true;
 }
 
 void FrameBuffer::setScissorTest(bool enableScissor, const vec4<GLint> &scissor)
 {
-    parameters.enableScissor = enableScissor;
-    parameters.scissor = scissor;
+    parameters.multiScissor = false;
+    parameters.enableScissor[0] = enableScissor;
+    parameters.scissor[0] = scissor;
+    parameters.scissorId = ++PARAMETER_ID;
+    parametersChanged = true;
+}
+
+void FrameBuffer::setScissorTest(int index, bool enableScissor, const vec4<GLint> &scissor)
+{
+    if (!parameters.multiScissor) {
+        for (int i = 1; i < 16; ++i) {
+            parameters.enableScissor[i] = parameters.enableScissor[0];
+            parameters.scissor[i] = parameters.scissor[0];
+        }
+        parameters.multiScissor = true;
+    }
+    parameters.enableScissor[index] = enableScissor;
+    parameters.scissor[index] = scissor;
+    parameters.scissorId = ++PARAMETER_ID;
     parametersChanged = true;
 }
 
@@ -1256,16 +1403,16 @@ void FrameBuffer::drawIndirect(ptr<Program> p, const MeshBuffers &mesh, MeshMode
     endConditionalRender();
 }
 
-void FrameBuffer::drawFeedback(ptr<Program> p, MeshMode m, const TransformFeedback &tfb, int stream)
+void FrameBuffer::drawFeedback(ptr<Program> p, const MeshBuffers &mesh, MeshMode m, const TransformFeedback &tfb, int stream)
 {
-    assert(TransformFeedback::TRANSFORM == NULL);
+    assert(TransformFeedback::TRANSFORM == NULL && tfb.id != 0);
     set();
     p->set();
     if (Logger::DEBUG_LOGGER != NULL) {
         Logger::DEBUG_LOGGER->log("RENDER", "DrawFeedBack");
     }
     beginConditionalRender();
-    glDrawTransformFeedbackStream(getMeshMode(m), tfb.id, stream);
+    mesh.drawFeedback(m, tfb.id, stream);
     endConditionalRender();
 }
 
@@ -1295,6 +1442,7 @@ void FrameBuffer::readPixels(int x, int y, int w, int h, TextureFormat f, PixelT
     glReadPixels(x, y, w, h, getTextureFormat(f), getPixelType(t), dstBuf.data(0));
     s.unset();
     dstBuf.unbind(GL_PIXEL_PACK_BUFFER);
+    dstBuf.dirty();
     assert(getError() == 0);
 }
 
@@ -1433,7 +1581,7 @@ void FrameBuffer::set()
         if (drawBufferCount == 1) {
             glDrawBuffer(getBuffer(drawBuffers[0]));
         } else {
-            GLenum drawBufs[4];
+            GLenum drawBufs[8];
             for (int i = 0; i < drawBufferCount; ++i) {
                 drawBufs[i] = getBuffer(drawBuffers[i]);
             }
@@ -1454,11 +1602,18 @@ void FrameBuffer::setAttachments()
         GL_COLOR_ATTACHMENT1,
         GL_COLOR_ATTACHMENT2,
         GL_COLOR_ATTACHMENT3,
+        GL_COLOR_ATTACHMENT4,
+        GL_COLOR_ATTACHMENT5,
+        GL_COLOR_ATTACHMENT6,
+        GL_COLOR_ATTACHMENT7,
         GL_STENCIL_ATTACHMENT,
         GL_DEPTH_ATTACHMENT
     };
 
-    for (int i = 0; i < 6; ++i) {
+    for (int i = 0; i < 10; ++i) {
+        if (framebufferId == 0 && i >= 4 && i < 8) {
+            continue;
+        }
         if (textures[i] == NULL) {
             glFramebufferRenderbuffer(GL_FRAMEBUFFER, ATTACHMENTS[i], GL_RENDERBUFFER, 0);
             continue;
@@ -1570,7 +1725,7 @@ void FrameBuffer::endConditionalRender()
 
 GLenum FrameBuffer::getBuffer(BufferId b) const
 {
-    switch (b & (COLOR0 | COLOR1 | COLOR2 | COLOR3)) {
+    switch (b & (COLOR0 | COLOR1 | COLOR2 | COLOR3 | COLOR4 | COLOR5 | COLOR6 | COLOR7)) {
     case 0:
         return GL_NONE;
     case COLOR0:
@@ -1581,6 +1736,14 @@ GLenum FrameBuffer::getBuffer(BufferId b) const
         return framebufferId == 0 ? GL_BACK_LEFT : GL_COLOR_ATTACHMENT2;
     case COLOR3:
         return framebufferId == 0 ? GL_BACK_RIGHT : GL_COLOR_ATTACHMENT3;
+    case COLOR4:
+        return framebufferId == 0 ? GL_NONE : GL_COLOR_ATTACHMENT4;
+    case COLOR5:
+        return framebufferId == 0 ? GL_NONE : GL_COLOR_ATTACHMENT5;
+    case COLOR6:
+        return framebufferId == 0 ? GL_NONE : GL_COLOR_ATTACHMENT6;
+    case COLOR7:
+        return framebufferId == 0 ? GL_NONE : GL_COLOR_ATTACHMENT7;
     }
     assert(false);
     throw exception();

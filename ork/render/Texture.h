@@ -1,24 +1,42 @@
 /*
  * Ork: a small object-oriented OpenGL Rendering Kernel.
- * Copyright (c) 2008-2010 INRIA
+ * Website : http://ork.gforge.inria.fr/
+ * Copyright (c) 2008-2015 INRIA - LJK (CNRS - Grenoble University)
+ * All rights reserved.
+ * Redistribution and use in source and binary forms, with or without 
+ * modification, are permitted provided that the following conditions are met:
+ * 
+ * 1. Redistributions of source code must retain the above copyright notice, 
+ * this list of conditions and the following disclaimer.
+ * 
+ * 2. Redistributions in binary form must reproduce the above copyright notice, 
+ * this list of conditions and the following disclaimer in the documentation 
+ * and/or other materials provided with the distribution.
+ * 
+ * 3. Neither the name of the copyright holder nor the names of its contributors 
+ * may be used to endorse or promote products derived from this software without 
+ * specific prior written permission.
+ * 
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
+ * ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED 
+ * WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. 
+ * IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, 
+ * INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, 
+ * BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, 
+ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF 
+ * LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE 
+ * OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED 
+ * OF THE POSSIBILITY OF SUCH DAMAGE.
  *
- * This library is free software; you can redistribute it and/or modify it
- * under the terms of the GNU Lesser General Public License as published by
- * the Free Software Foundation; either version 3 of the License, or (at
- * your option) any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License
- * for more details.
- *
- * You should have received a copy of the GNU Lesser General Public License
- * along with this library; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301 USA.
  */
-
 /*
- * Authors: Eric Bruneton, Antoine Begault, Guillaume Piolat.
+ * Ork is distributed under the BSD3 Licence. 
+ * For any assistance, feedback and remarks, you can check out the 
+ * mailing list on the project page : 
+ * http://ork.gforge.inria.fr/
+ */
+/*
+ * Main authors: Eric Bruneton, Antoine Begault, Guillaume Piolat.
  */
 
 #ifndef _ORK_TEXTURE_H_
@@ -27,8 +45,6 @@
 #include <vector>
 
 #include "ork/render/Sampler.h"
-
-using namespace std;
 
 namespace ork
 {
@@ -255,17 +271,17 @@ protected:
 
     /**
      * Binds this texture and the given sampler to a texture unit, for the
-     * given program. If there is a texture unit to which no texture is
+     * given programs. If there is a texture unit to which no texture is
      * currently bound the texture is bound to this unit. Otherwise the
-     * least recently used texture unit that is not used by the given program
+     * least recently used texture unit that is not used by the given programs
      * is unbound, and this texture is bound instead.
      *
      * @param s a sampler object to sample this texture. May be NULL.
-     * @param programId the program for which this texture must be bound.
+     * @param programIds the programs for which this texture must be bound.
      * @return the texture unit to which the texture has been bound, or -1
-     *      if the binding failed (all units already used by the program).
+     *      if the binding failed (all units already used by the programs).
      */
-    GLint bindToTextureUnit(ptr<Sampler> s, GLuint programId) const;
+    GLint bindToTextureUnit(ptr<Sampler> s, const std::vector<GLuint> &programIds) const;
 
     /**
      * Binds this texture to a texture unit. If there is a texture unit
@@ -308,12 +324,12 @@ private:
      * There is one possible binding per sampler object (a texture can be
      * bound to several units with different sampler objects).
      */
-    mutable map<GLuint, GLuint> currentTextureUnits;
+    mutable std::map<GLuint, GLuint> currentTextureUnits;
 
     /**
      * Identifiers of the programs that use this texture.
      */
-    mutable vector<GLuint> programIds;
+    mutable std::vector<GLuint> programIds;
 
     /**
      * Adds the given program as a user of this texture.
@@ -326,9 +342,9 @@ private:
     void removeUser(GLuint programId) const;
 
     /**
-     * Returns true if the given program uses this texture.
+     * Returns true if one of the given programs uses this texture.
      */
-    bool isUsedBy(GLuint programId) const;
+    bool isUsedBy(const std::vector<GLuint> &programIds) const;
 
     /**
      * Returns the actual maximum number of texture units.

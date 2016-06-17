@@ -46,7 +46,7 @@ public:
      * @param setUniforms true to set the uniforms of the program, using the
      *      values defined in the scene node from which this task is called.
      */
-    SetProgramTask(const vector<QualifiedName> &modules, bool setUniforms);
+    SetProgramTask(const std::vector<QualifiedName> &modules, bool setUniforms);
 
     /**
      * Deletes this SetProgramTask.
@@ -71,7 +71,7 @@ protected:
      * @param setUniforms true to set the uniforms of the program, using the
      *      values defined in the scene node from which this task is called.
      */
-    void init(const vector<QualifiedName> &modules, bool setUniforms);
+    void init(const std::vector<QualifiedName> &modules, bool setUniforms);
 
     /**
      * Swaps this SetProgramTask with the given one.
@@ -87,7 +87,7 @@ private:
      * that contains the module. The second part specifies the name of the
      * module in this node.
      */
-    vector<QualifiedName> modules;
+    std::vector<QualifiedName> modules;
 
     /**
      * True to set the uniforms of the program, using the values defined

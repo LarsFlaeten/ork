@@ -28,8 +28,6 @@
 
 #include "ork/resource/Resource.h"
 
-using namespace std;
-
 namespace ork
 {
 
@@ -53,8 +51,8 @@ public:
      *      as the XML element in which the %resource descriptor was found).
      * @return the created %resource.
      */
-    typedef ptr<Object> (*createFunc) (ptr<ResourceManager> manager, const string &name,
-                                       ptr<ResourceDescriptor> desc, const TiXmlElement *e);
+    typedef ptr<Object> (*createFunc) (ptr<ResourceManager> manager, const std::string &name,
+        ptr<ResourceDescriptor> desc, const TiXmlElement *e);
 
     /**
      * Returns the unique instance of this class.
@@ -68,7 +66,7 @@ public:
      *      ResourceDescriptor (e.g. texture1D, texture2D, shader, program, etc).
      * @param f a function that can create %resources of this type.
      */
-    void addType(const string &type, createFunc f);
+    void addType(const std::string &type, createFunc f);
 
     /**
      * Creates a Resource from the given ResourceDescriptor.
@@ -80,8 +78,8 @@ public:
      *      as the XML element in which the %resource descriptor was found).
      * @return the created %resource.
      */
-    ptr<Object> create(ptr<ResourceManager> manager, const string &name,
-                       ptr<ResourceDescriptor> desc, const TiXmlElement *e = NULL);
+    ptr<Object> create(ptr<ResourceManager> manager, const std::string &name,
+        ptr<ResourceDescriptor> desc, const TiXmlElement *e = NULL);
 
     /**
      * A utility template to automate the registration of new %resource types.
@@ -98,8 +96,8 @@ public:
          * just calls new T(manager, name, desc, e).
          * See ResourceFactory::createFunc
          */
-        static ptr<Object> ctor(ptr<ResourceManager> manager, const string &name,
-                                ptr<ResourceDescriptor> desc, const TiXmlElement *e)
+        static ptr<Object> ctor(ptr<ResourceManager> manager, const std::string &name,
+                ptr<ResourceDescriptor> desc, const TiXmlElement *e)
         {
             return new T(manager, name, desc, e);
         }
@@ -113,7 +111,7 @@ public:
          */
         Type()
         {
-            ResourceFactory::getInstance()->addType(string(t), ctor);
+            ResourceFactory::getInstance()->addType(std::string(t), ctor);
         }
     };
 
@@ -122,7 +120,7 @@ private:
      * The registered creation functions. Maps %resource types (such as shader,
      * program, mesh, etc) to %resource creation functions.
      */
-    map<string, createFunc> types;
+    std::map<std::string, createFunc> types;
 
     /**
      * The unique instance of this class.

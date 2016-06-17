@@ -1,24 +1,42 @@
 /*
  * Ork: a small object-oriented OpenGL Rendering Kernel.
- * Copyright (c) 2008-2010 INRIA
+ * Website : http://ork.gforge.inria.fr/
+ * Copyright (c) 2008-2015 INRIA - LJK (CNRS - Grenoble University)
+ * All rights reserved.
+ * Redistribution and use in source and binary forms, with or without 
+ * modification, are permitted provided that the following conditions are met:
+ * 
+ * 1. Redistributions of source code must retain the above copyright notice, 
+ * this list of conditions and the following disclaimer.
+ * 
+ * 2. Redistributions in binary form must reproduce the above copyright notice, 
+ * this list of conditions and the following disclaimer in the documentation 
+ * and/or other materials provided with the distribution.
+ * 
+ * 3. Neither the name of the copyright holder nor the names of its contributors 
+ * may be used to endorse or promote products derived from this software without 
+ * specific prior written permission.
+ * 
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
+ * ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED 
+ * WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. 
+ * IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, 
+ * INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, 
+ * BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, 
+ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF 
+ * LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE 
+ * OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED 
+ * OF THE POSSIBILITY OF SUCH DAMAGE.
  *
- * This library is free software; you can redistribute it and/or modify it
- * under the terms of the GNU Lesser General Public License as published by
- * the Free Software Foundation; either version 3 of the License, or (at
- * your option) any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License
- * for more details.
- *
- * You should have received a copy of the GNU Lesser General Public License
- * along with this library; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301 USA.
  */
-
 /*
- * Authors: Eric Bruneton, Antoine Begault, Guillaume Piolat.
+ * Ork is distributed under the BSD3 Licence. 
+ * For any assistance, feedback and remarks, you can check out the 
+ * mailing list on the project page : 
+ * http://ork.gforge.inria.fr/
+ */
+/*
+ * Main authors: Eric Bruneton, Antoine Begault, Guillaume Piolat.
  */
 
 #ifndef _ORK_COMPILED_RESOURCE_LOADER_H_
@@ -39,7 +57,7 @@ namespace ork
 class MyResourceLoader : public CompiledResourceLoader
 {
 public:
-    MyResourceLoader(const string &resourceDataFile) :
+    MyResourceLoader(const std::string &resourceDataFile) :
         CompiledResourceLoader(resourceDataFile)
     {
 #include "resourceFile"
@@ -88,7 +106,7 @@ public:
      *      resources that must be loaded by this loader. This file
      *      must have been produced by a ResourceCompiler.
      */
-    CompiledResourceLoader(const string &resourceDataFile);
+    CompiledResourceLoader(const std::string &resourceDataFile);
 
     /**
      * Deletes this CompiledResourceLoader.
@@ -104,7 +122,7 @@ public:
      * @return the path of this resource.
      * @throw exception if the resource is not found.
      */
-    virtual string findResource(const string &name);
+    virtual std::string findResource(const std::string &name);
 
     /**
      * Loads the ResourceDescriptor of the given name. This method looks for
@@ -115,7 +133,7 @@ public:
      * @return the ResourceDescriptor of the given name, or NULL if the %resource
      *      is not found.
      */
-    virtual ptr<ResourceDescriptor> loadResource(const string &name);
+    virtual ptr<ResourceDescriptor> loadResource(const std::string &name);
 
     /**
      * Reloads the ResourceDescriptor of the given name. This method always
@@ -126,7 +144,7 @@ public:
      * @return the new value of this ResourceDescriptor, or NULL if this value
      *      has not changed.
      */
-    virtual ptr<ResourceDescriptor> reloadResource(const string &name, ptr<ResourceDescriptor> currentValue);
+    virtual ptr<ResourceDescriptor> reloadResource(const std::string &name, ptr<ResourceDescriptor> currentValue);
 
 protected:
     /**
@@ -137,24 +155,24 @@ protected:
     /**
      * The paths that can be returned by #findResource.
      */
-    map<string, string> paths;
+    std::map<std::string, std::string> paths;
 
     /**
      * The %resource descriptors that can be returned by #loadResource.
      */
-    map< string, ptr<ResourceDescriptor> > resources;
+    std::map< std::string, ptr<ResourceDescriptor> > resources;
 
     /**
      * Adds a %resource path to #paths. This method is called by the code
      * generated by ResourceCompiler.
      */
-    void addPath(const string &name, const string &path);
+    void addPath(const std::string &name, const std::string &path);
 
     /**
      * Adds a %resource descriptor to #resources. This method is called by
      * the code generated by ResourceCompiler.
      */
-    void addResource(const string &name, ptr<ResourceDescriptor> desc);
+    void addResource(const std::string &name, ptr<ResourceDescriptor> desc);
 };
 
 }

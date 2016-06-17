@@ -1,24 +1,42 @@
 /*
  * Ork: a small object-oriented OpenGL Rendering Kernel.
- * Copyright (c) 2008-2010 INRIA
+ * Website : http://ork.gforge.inria.fr/
+ * Copyright (c) 2008-2015 INRIA - LJK (CNRS - Grenoble University)
+ * All rights reserved.
+ * Redistribution and use in source and binary forms, with or without 
+ * modification, are permitted provided that the following conditions are met:
+ * 
+ * 1. Redistributions of source code must retain the above copyright notice, 
+ * this list of conditions and the following disclaimer.
+ * 
+ * 2. Redistributions in binary form must reproduce the above copyright notice, 
+ * this list of conditions and the following disclaimer in the documentation 
+ * and/or other materials provided with the distribution.
+ * 
+ * 3. Neither the name of the copyright holder nor the names of its contributors 
+ * may be used to endorse or promote products derived from this software without 
+ * specific prior written permission.
+ * 
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
+ * ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED 
+ * WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. 
+ * IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, 
+ * INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, 
+ * BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, 
+ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF 
+ * LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE 
+ * OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED 
+ * OF THE POSSIBILITY OF SUCH DAMAGE.
  *
- * This library is free software; you can redistribute it and/or modify it
- * under the terms of the GNU Lesser General Public License as published by
- * the Free Software Foundation; either version 3 of the License, or (at
- * your option) any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License
- * for more details.
- *
- * You should have received a copy of the GNU Lesser General Public License
- * along with this library; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301 USA.
  */
-
 /*
- * Authors: Eric Bruneton, Antoine Begault, Guillaume Piolat.
+ * Ork is distributed under the BSD3 Licence. 
+ * For any assistance, feedback and remarks, you can check out the 
+ * mailing list on the project page : 
+ * http://ork.gforge.inria.fr/
+ */
+/*
+ * Main authors: Eric Bruneton, Antoine Begault, Guillaume Piolat.
  */
 
 #include "ork/scenegraph/ShowInfoTask.h"
@@ -27,59 +45,53 @@
 #include "ork/resource/ResourceTemplate.h"
 #include "ork/scenegraph/SceneManager.h"
 
+using namespace std;
+
 namespace ork
 {
 
 void initInfoTask(ptr<ResourceManager> manager, const string &name, ptr<ResourceDescriptor> desc, const TiXmlElement *e,
-                  ptr<Font> &f, ptr<Program> &p, int &c, float &size, vec3i &pos)
+    ptr<Font> &f, ptr<Program> &p, int &c, float &size, vec3i &pos)
 {
     e = e == NULL ? desc->descriptor : e;
-    Resource::checkParameters(desc, e, "x,y,maxLines,font,fontSize,fontColor,fontProgram,");
+    Resource::checkParameters(desc, e, "name,x,y,maxLines,font,fontSize,fontColor,fontProgram,");
     int x = 4;
     int y = -4;
     int maxLines = 8;
     vec4f color = vec4f(1.0f, 0.0f, 0.0f, 0.0f);
 
     string fontName = "defaultFont";
-    if (e->Attribute("font") != NULL)
-    {
+    if (e->Attribute("font") != NULL) {
         fontName = Resource::getParameter(desc, e, "font");
     }
     f = manager->loadResource(fontName).cast<Font>();
 
     size = f->getTileHeight();
-    if (e->Attribute("fontSize") != NULL)
-    {
+    if (e->Attribute("fontSize") != NULL) {
         Resource::getFloatParameter(desc, e, "fontSize", &size);
     }
 
-    if (e->Attribute("x") != NULL)
-    {
+    if (e->Attribute("x") != NULL) {
         Resource::getIntParameter(desc, e, "x", &x);
     }
-    if (e->Attribute("y") != NULL)
-    {
+    if (e->Attribute("y") != NULL) {
         Resource::getIntParameter(desc, e, "y", &y);
     }
-    if (e->Attribute("maxLines") != NULL)
-    {
+    if (e->Attribute("maxLines") != NULL) {
         Resource::getIntParameter(desc, e, "maxLines", &maxLines);
     }
-    if (e->Attribute("fontColor") != NULL)
-    {
+    if (e->Attribute("fontColor") != NULL) {
         string c = string(e->Attribute("fontColor")) + ",";
         string::size_type start = 0;
         string::size_type index;
-        for (int i = 0; i < 3; i++)
-        {
+        for (int i = 0; i < 3; i++) {
             index = c.find(',', start);
             color[i] = (float) atof(c.substr(start, index - start).c_str()) / 255;
             start = index + 1;
         }
     }
     string fontProgram = "text;";
-    if (e->Attribute("fontProgram") != NULL)
-    {
+    if (e->Attribute("fontProgram") != NULL) {
         fontProgram = string(e->Attribute("fontProgram"));
     }
     p = manager->loadResource(fontProgram).cast<Program>();
@@ -115,8 +127,7 @@ void ShowInfoTask::init(ptr<Font> f, ptr<Program> p, int color, float size, vec3
     fontColor = color;
     position = pos;
     fontHeight = size;
-    if (fontMesh == NULL)
-    {
+    if (fontMesh == NULL) {
         fontMesh = new Mesh<Font::Vertex, unsigned int>(TRIANGLES, CPU);
         fontMesh->addAttributeType(0, 4, A16F, false);
         fontMesh->addAttributeType(1, 4, A8UI, true);
@@ -144,8 +155,7 @@ void ShowInfoTask::drawLine(const vec4f &vp, float xs, float ys, int color, cons
 
 void ShowInfoTask::draw(ptr<Method> context)
 {
-    if (Logger::DEBUG_LOGGER != NULL)
-    {
+    if (Logger::DEBUG_LOGGER != NULL) {
         Logger::DEBUG_LOGGER->log("SCENEGRAPH", "ShowInfo");
     }
 
@@ -159,14 +169,11 @@ void ShowInfoTask::draw(ptr<Method> context)
     ++frames;
     double current = context->getOwner()->getOwner()->getTime();
     double delay = (current - start) * 1e-6;
-    if (delay > 1.0)
-    {
+    if (delay > 1.0) {
         fps = int(frames / delay);
         frames = 0;
         start = current;
-    }
-    else if (delay < 0.0)
-    {
+    } else if (delay < 0.0) {
         // happens when replaying recorded events
         fps = 0;
         frames = 0;
@@ -174,12 +181,9 @@ void ShowInfoTask::draw(ptr<Method> context)
     }
     ostringstream os;
     map<string, string>::iterator i = infos.find("FPS");
-    if (i == infos.end())
-    {
+    if (i == infos.end()) {
         os << fps << " FPS";
-    }
-    else
-    {
+    } else {
         os << i->second << " FPS";
     }
 
@@ -188,10 +192,8 @@ void ShowInfoTask::draw(ptr<Method> context)
     ys += fontHeight;
 
     i = infos.begin();
-    while (i != infos.end())
-    {
-        if (i->first != "FPS" && i->second.length() > 0)
-        {
+    while (i != infos.end()) {
+        if (i->first != "FPS" && i->second.length() > 0) {
             drawLine(vp, xs, ys, fontColor, i->second);
             ys += fontHeight;
         }

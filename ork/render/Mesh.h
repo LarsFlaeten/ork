@@ -1,24 +1,42 @@
 /*
  * Ork: a small object-oriented OpenGL Rendering Kernel.
- * Copyright (c) 2008-2010 INRIA
+ * Website : http://ork.gforge.inria.fr/
+ * Copyright (c) 2008-2015 INRIA - LJK (CNRS - Grenoble University)
+ * All rights reserved.
+ * Redistribution and use in source and binary forms, with or without 
+ * modification, are permitted provided that the following conditions are met:
+ * 
+ * 1. Redistributions of source code must retain the above copyright notice, 
+ * this list of conditions and the following disclaimer.
+ * 
+ * 2. Redistributions in binary form must reproduce the above copyright notice, 
+ * this list of conditions and the following disclaimer in the documentation 
+ * and/or other materials provided with the distribution.
+ * 
+ * 3. Neither the name of the copyright holder nor the names of its contributors 
+ * may be used to endorse or promote products derived from this software without 
+ * specific prior written permission.
+ * 
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
+ * ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED 
+ * WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. 
+ * IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, 
+ * INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, 
+ * BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, 
+ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF 
+ * LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE 
+ * OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED 
+ * OF THE POSSIBILITY OF SUCH DAMAGE.
  *
- * This library is free software; you can redistribute it and/or modify it
- * under the terms of the GNU Lesser General Public License as published by
- * the Free Software Foundation; either version 3 of the License, or (at
- * your option) any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License
- * for more details.
- *
- * You should have received a copy of the GNU Lesser General Public License
- * along with this library; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301 USA.
  */
-
 /*
- * Authors: Eric Bruneton, Antoine Begault, Guillaume Piolat.
+ * Ork is distributed under the BSD3 Licence. 
+ * For any assistance, feedback and remarks, you can check out the 
+ * mailing list on the project page : 
+ * http://ork.gforge.inria.fr/
+ */
+/*
+ * Main authors: Eric Bruneton, Antoine Begault, Guillaume Piolat.
  */
 
 #ifndef _ORK_MESH_H_
@@ -29,8 +47,6 @@
 #include "ork/render/CPUBuffer.h"
 #include "ork/render/GPUBuffer.h"
 #include "ork/render/MeshBuffers.h"
-
-using namespace std;
 
 namespace ork
 {
@@ -94,6 +110,13 @@ public:
      * Returns the number of indices of this mesh.
      */
     inline int getIndiceCount() const;
+
+    /**
+     * Returns an indice of this mesh.
+     *
+     * @param i an indice index.
+     */
+    inline index getIndice(int i) const;
 
     /**
      * Returns the vertex index used for primitive restart. -1 means no restart.
@@ -360,6 +383,12 @@ int Mesh<vertex, index>::getIndiceCount() const
 }
 
 template<class vertex, class index>
+index Mesh<vertex, index>::getIndice(int i) const
+{
+    return indices[i];
+}
+
+template<class vertex, class index>
 GLint Mesh<vertex, index>::getPrimitiveRestart() const
 {
     return primitiveRestart;
@@ -392,20 +421,16 @@ void Mesh<vertex, index>::uploadIndexDataToGPU(BufferUsage u) const
 template<class vertex, class index>
 ptr<MeshBuffers> Mesh<vertex, index>::getBuffers() const
 {
-    if (!created)
-    {
+    if (!created) {
         createBuffers();
     }
 
-    if ((usage == GPU_DYNAMIC) || (usage == GPU_STREAM))   // upload data to GPU if needed
-    {
+    if ((usage == GPU_DYNAMIC) || (usage == GPU_STREAM)) { // upload data to GPU if needed
         BufferUsage u = usage == GPU_DYNAMIC ? DYNAMIC_DRAW : STREAM_DRAW;
-        if (vertexDataHasChanged)
-        {
+        if (vertexDataHasChanged) {
             uploadVertexDataToGPU(u);
         }
-        if ((indicesCount != 0) && indexDataHasChanged)
-        {
+        if ((indicesCount != 0) && indexDataHasChanged) {
             uploadIndexDataToGPU(u);
         }
     }
@@ -425,12 +450,10 @@ void Mesh<vertex, index>::addAttributeType(int id, int size, AttributeType type,
 template<class vertex, class index>
 void Mesh<vertex, index>::setCapacity(int vertexCount, int indiceCount)
 {
-    if (verticesCount < vertexCount)
-    {
+    if (verticesCount < vertexCount) {
         resizeVertices(vertexCount);
     }
-    if (indicesCount < indiceCount)
-    {
+    if (indicesCount < indiceCount) {
         resizeIndices(indiceCount);
     }
 }
@@ -438,8 +461,7 @@ void Mesh<vertex, index>::setCapacity(int vertexCount, int indiceCount)
 template<class vertex, class index>
 void Mesh<vertex, index>::addVertex(const vertex &v)
 {
-    if (verticesCount == verticesLength)
-    {
+    if (verticesCount == verticesLength) {
         resizeVertices(2 * verticesLength);
     }
     vertices[verticesCount++] = v;
@@ -449,8 +471,7 @@ void Mesh<vertex, index>::addVertex(const vertex &v)
 template<class vertex, class index>
 void Mesh<vertex, index>::addVertices(const vertex *v, int count)
 {
-    for (int i = 0; i < count; ++i)
-    {
+    for (int i = 0; i < count; ++i) {
         addVertex(v[i]);
     }
 }
@@ -458,8 +479,7 @@ void Mesh<vertex, index>::addVertices(const vertex *v, int count)
 template<class vertex, class index>
 void Mesh<vertex, index>::addIndice(index i)
 {
-    if (indicesCount == indicesLength)
-    {
+    if (indicesCount == indicesLength) {
         resizeIndices(2 * indicesLength);
     }
     indices[indicesCount++] = i;
@@ -506,8 +526,7 @@ void Mesh<vertex, index>::resizeVertices(int newSize)
     delete[] vertices;
     vertices = newVertices;
     verticesLength = newSize;
-    if (created)
-    {
+    if (created) {
         buffers->reset();
         created = false;
     }
@@ -521,8 +540,7 @@ void Mesh<vertex, index>::resizeIndices(int newSize)
     delete[] indices;
     indices = newIndices;
     indicesLength = newSize;
-    if (created)
-    {
+    if (created) {
         buffers->reset();
         created = false;
     }
@@ -535,8 +553,7 @@ void Mesh<vertex, index>::clear()
     indicesCount = 0;
     vertexDataHasChanged = true;
     indexDataHasChanged = true;
-    if (created)
-    {
+    if (created) {
         buffers->reset();
         buffers->setIndicesBuffer(NULL);
         created = false;
@@ -546,8 +563,7 @@ void Mesh<vertex, index>::clear()
 template<class vertex, class index>
 void Mesh<vertex, index>::clearBuffers()
 {
-    if (created)
-    {
+    if (created) {
         buffers->reset();
         created = false;
     }
@@ -556,47 +572,36 @@ void Mesh<vertex, index>::clearBuffers()
 template<class vertex, class index>
 void Mesh<vertex, index>::createBuffers() const
 {
-    if (usage == GPU_STATIC || usage == GPU_DYNAMIC || usage ==  GPU_STREAM)
-    {
+    if (usage == GPU_STATIC || usage == GPU_DYNAMIC || usage ==  GPU_STREAM) {
         GPUBuffer *gpub = new GPUBuffer();
         vertexBuffer = ptr<Buffer>(gpub);
-        if (usage == GPU_STATIC)
-        {
+        if (usage == GPU_STATIC) {
             uploadVertexDataToGPU(STATIC_DRAW);
         }
-    }
-    else if (usage == CPU)
-    {
+    } else if (usage == CPU) {
         CPUBuffer *cpub = new CPUBuffer(vertices);
         vertexBuffer = ptr<Buffer>((Buffer*)cpub);
     }
 
     assert(buffers->getAttributeCount() > 0);
-    for (int i = 0; i < buffers->getAttributeCount(); ++i)
-    {
+    for (int i = 0; i < buffers->getAttributeCount(); ++i) {
         buffers->getAttributeBuffer(i)->setBuffer(vertexBuffer);
     }
 
-    if (indicesCount != 0)
-    {
-        if (usage == GPU_STATIC || usage == GPU_DYNAMIC || usage == GPU_STREAM)
-        {
+    if (indicesCount != 0) {
+        if (usage == GPU_STATIC || usage == GPU_DYNAMIC || usage == GPU_STREAM) {
             GPUBuffer *gpub = new GPUBuffer();
             indexBuffer = ptr<Buffer>(gpub);
-            if (usage == GPU_STATIC)
-            {
+            if (usage == GPU_STATIC) {
                 uploadIndexDataToGPU(STATIC_DRAW);
             }
-        }
-        else if (usage == CPU)
-        {
+        } else if (usage == CPU) {
             CPUBuffer *cpub = new CPUBuffer(indices);
             indexBuffer = ptr<Buffer>(cpub);
         }
 
         AttributeType type;
-        switch (sizeof(index))
-        {
+        switch (sizeof(index)) {
         case 1:
             type = A8UI;
             break;
