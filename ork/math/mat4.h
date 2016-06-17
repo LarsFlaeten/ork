@@ -448,7 +448,7 @@ inline mat4<type> mat4<type>::operator-(const mat4<type>& m2) const
     r.m[3][0] = m[3][0] - m2.m[3][0];
     r.m[3][1] = m[3][1] - m2.m[3][1];
     r.m[3][2] = m[3][2] - m2.m[3][2];
-    r.m[3][3] = m[3][3] - m2.m[3][3];
+    r.m[3][3] = m[3][3] - m2.m[3][3];
 
     return r;
 }
