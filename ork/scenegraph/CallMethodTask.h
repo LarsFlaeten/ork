@@ -69,8 +69,8 @@ public:
     virtual ~CallMethodTask();
 
     virtual ptr<Task> getTask(ptr<Object> context);
-
 protected:
+
     /**
      * Creates an empty CallMethodTask.
      */
