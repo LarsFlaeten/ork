@@ -1,0 +1,9 @@
+<?xml version="1.0" ?>
+<sequence>
+    <setProgram>
+        <module name="camera.material"/>
+        <module name="this.material"/>
+    </setProgram>
+    <setTransforms cameraToWorld="cameraToWorld" screenToCamera="screenToCamera"/>
+    <drawMesh name="this.geometry"/>
+</sequence>

@@ -1,0 +1,89 @@
+REQUIREMENTS
+------------------------------------------------------------------------------
+
+Ork requires the latest driver for your graphics card, providing support for
+OpenGL 3.3. Ork can also benefit from some OpenGL 4.1 features (like the
+glProgramUniform* entry points), but it does not require a full support of
+OpenGL 4.0 or 4.1 to be used (unless you want to use the new features provided
+by OpenGL 4, like tesselation).
+
+Ork also requires the following external libraries:
+- glew-1.5.6
+- pthreads-2.8.0 (only the task graph and scene graph frameworks)
+- glut or freeglut (only for the GlutWindow class)
+
+INSTALLATION
+------------------------------------------------------------------------------
+
+Ork comes with two project files, one for Code::Blocks (either on Windows or
+Linux), the other for Microsoft Visual C++ 2010. Each project has four targets
+to build:
+- the Ork library in debug mode
+- the Ork library in release mode
+- unit tests for Ork
+- examples using Ork
+
+For the Code::Blocks project you need to define the following global compiler
+variables:
+- glut (base) : either glut32 or freeglut 
+- glut (cflags) : either USE_GLUT or USE_FREEGLUT
+- glew : the path to the glew DLL, e.g. C:\Progra~1\glew\glew32.dll
+
+The USE_SHARED_PTR preprocessor flag can be set to use std::tr1::shared_ptr
+(needs a compiler providing support for this). Otherwise smart pointers use
+an Ork specific implementation (potentially more efficient since based on
+intrusive counters).
+
+
+UNIT TESTS
+------------------------------------------------------------------------------
+
+The unit tests are launched with the following command line:
+
+ork-tests (ALL | FORK | testName) [GL4]
+
+ALL runs all the tests in a single process, FORK runs each test in a separate
+process, and 'testName' runs only the test named 'testName'. GL4 is optional.
+If present, it means that a GL4 context should be used to run the tests (this
+only works with freeglut - in other cases the default context is used).
+
+EXAMPLES
+------------------------------------------------------------------------------
+
+Nine examples are provided with Ork. They are run with the following
+command lines:
+
+- ork-examples minimal
+
+- ork-examples render examples
+- ork-examples resource examples
+- ork-examples scenegraph examples
+- ork-examples scenegraphresource exampleScene
+
+- ork-examples scenegraphresource postprocessScene
+- ork-examples scenegraphresource skyboxScene
+- ork-examples scenegraphresource cubesScene
+
+- ork-examples tessellation
+
+The minimal example displays a checkerboard pattern. The next four examples
+are four different implementations of the same "application", showing a cube
+floating over a plane. The first implementation uses the core API only, the
+second one uses this API together with the resource framework, the third
+implementation uses the scene graph framework, and the fourth uses the scene
+graph framework via the resource framework. This fourth implementation can in
+fact load any scene graph, as shown by the next three examples:
+postprocessScene shows how the generic scene graph can be use to define
+various rendering strategies, skyboxScene illustrates how cubemap textures
+must be defined in 2D textures, and cubesScene shows how uniforms defined in
+scene nodes can be used in GLSL programs. The last example illustrates how
+tessellation shaders can be used (it only works with an OpenGL 4 graphics
+card).
+
+KNOWN BUGS
+------------------------------------------------------------------------------
+
+Some tests fail with ATI cards (e.g. HD 2400 or HD 5400), in particular all
+the tests related to uniform blocks. As a consequence, many examples fail too.
+These bugs do not appear with NVIDIA cards (e.g. GTX 470 or GTX 260M), so we 
+suspect driver bugs.

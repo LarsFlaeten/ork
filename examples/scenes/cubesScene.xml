@@ -1,0 +1,76 @@
+<?xml version="1.0" ?>
+<node>
+    <node flags="camera">
+        <module id="material" value="camera"/>
+        <method id="draw" value="cameraMethod"/>
+    </node>
+    <node flags="light">
+        <translate x="30" y="30" z="30"/>
+        <rotatez angle="135"/>
+        <rotatex angle="45"/>
+        <module id="material" value="spotlight"/>
+        <method id="draw" value="lightMethod"/>
+    </node>
+    <node flags="object">
+        <translate x="-2" y="-2" z="-2"/>
+        <mesh id="geometry" value="cube.mesh"/>
+        <module id="material" value="flat"/>
+        <uniform4f id="color" name="color" x="0.0" y="0.0" z="0.0" w="0.0"/>
+        <method id="draw" value="meshMethod"/>
+    </node>
+    <node flags="object">
+        <translate x="-2" y="-2" z="2"/>
+        <mesh id="geometry" value="cube.mesh"/>
+        <module id="material" value="flat"/>
+        <uniform4f id="color" name="color" x="0.0" y="0.0" z="1.0" w="0.0"/>
+        <method id="draw" value="meshMethod"/>
+    </node>
+    <node flags="object">
+        <translate x="-2" y="2" z="-2"/>
+        <mesh id="geometry" value="cube.mesh"/>
+        <module id="material" value="flat"/>
+        <uniform4f id="color" name="color" x="0.0" y="1.0" z="0.0" w="0.0"/>
+        <method id="draw" value="meshMethod"/>
+    </node>
+    <node flags="object">
+        <translate x="-2" y="2" z="2"/>
+        <mesh id="geometry" value="cube.mesh"/>
+        <module id="material" value="flat"/>
+        <uniform4f id="color" name="color" x="0.0" y="1.0" z="1.0" w="0.0"/>
+        <method id="draw" value="meshMethod"/>
+    </node>
+    <node flags="object">
+        <translate x="2" y="-2" z="-2"/>
+        <mesh id="geometry" value="cube.mesh"/>
+        <module id="material" value="flat"/>
+        <uniform4f id="color" name="color" x="1.0" y="0.0" z="0.0" w="0.0"/>
+        <method id="draw" value="meshMethod"/>
+    </node>
+    <node flags="object">
+        <translate x="2" y="-2" z="2"/>
+        <mesh id="geometry" value="cube.mesh"/>
+        <module id="material" value="flat"/>
+        <uniform4f id="color" name="color" x="1.0" y="0.0" z="1.0" w="0.0"/>
+        <method id="draw" value="meshMethod"/>
+    </node>
+    <node flags="object">
+        <translate x="2" y="2" z="-2"/>
+        <mesh id="geometry" value="cube.mesh"/>
+        <module id="material" value="flat"/>
+        <uniform4f id="color" name="color" x="1.0" y="1.0" z="0.0" w="0.0"/>
+        <method id="draw" value="meshMethod"/>
+    </node>
+    <node flags="object">
+        <translate x="2" y="2" z="2"/>
+        <mesh id="geometry" value="cube.mesh"/>
+        <module id="material" value="flat"/>
+        <uniform4f id="color" name="color" x="1.0" y="1.0" z="1.0" w="0.0"/>
+        <method id="draw" value="meshMethod"/>
+    </node>
+    <node flags="overlay">
+        <method id="draw" value="logMethod"/>
+    </node>
+    <node flags="overlay">
+        <method id="draw" value="infoMethod"/>
+    </node>
+</node>

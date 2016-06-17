@@ -1,0 +1,2 @@
+<?xml version="1.0" ?>
+<textureCube name="cubemap" source="cubemap.png" internalformat="RGB8" min="LINEAR_MIPMAP_LINEAR" mag="LINEAR"/>

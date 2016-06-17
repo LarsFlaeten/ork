@@ -1,0 +1,2 @@
+<?xml version="1.0" ?>
+<texture2D name="offscreenColor" internalformat="RGBA32F" min="LINEAR_MIPMAP_LINEAR" mag="LINEAR" format="RGB" width="32" height="32" type="FLOAT"/>

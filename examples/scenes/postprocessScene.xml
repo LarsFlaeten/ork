@@ -1,0 +1,33 @@
+<?xml version="1.0" ?>
+<node>
+    <node flags="camera">
+        <module id="material" value="camera"/>
+        <method id="draw" value="cameraMethodPostprocess"/>
+    </node>
+    <node flags="light">
+        <translate x="3" y="3" z="3"/>
+        <rotatez angle="135"/>
+        <rotatex angle="45"/>
+        <module id="material" value="spotlight"/>
+        <method id="draw" value="lightMethod"/>
+    </node>
+    <node flags="object">
+        <rotatez angle="15"/>
+        <mesh id="geometry" value="cube.mesh"/>
+        <module id="material" value="plastic"/>
+        <method id="draw" value="objectMethod"/>
+    </node>
+    <node flags="object">
+        <translate x="0" y="0" z="-2"/>
+        <rotatez angle="180"/>
+        <mesh id="geometry" value="plane.mesh"/>
+        <module id="material" value="texturedPlastic"/>
+        <method id="draw" value="objectMethod"/>
+    </node>
+    <node flags="overlay">
+        <method id="draw" value="logMethod"/>
+    </node>
+    <node flags="overlay">
+        <method id="draw" value="infoMethod"/>
+    </node>
+</node>

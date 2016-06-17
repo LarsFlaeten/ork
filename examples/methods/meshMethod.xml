@@ -1,0 +1,10 @@
+<?xml version="1.0" ?>
+<sequence>
+    <setProgram setUniforms="true">
+        <module name="camera.material"/>
+        <module name="light.material"/>
+        <module name="this.material"/>
+    </setProgram>
+    <setTransforms localToScreen="localToScreen" localToWorld="localToWorld"/>
+    <drawMesh name="this.geometry"/>
+</sequence>

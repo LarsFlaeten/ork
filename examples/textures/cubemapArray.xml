@@ -1,0 +1,2 @@
+<?xml version="1.0" ?>
+<textureCubeArray name="cubemapArray" source="cubemapArray.png" internalformat="RGB8" min="LINEAR_MIPMAP_LINEAR" mag="LINEAR"/>

@@ -1,0 +1,28 @@
+<?xml version="1.0" ?>
+<sequence>
+    <setTarget autoResize="true">
+        <buffer name="COLOR0" texture="offscreenColor"/>
+        <buffer name="DEPTH" texture="offscreenDepth"/>
+    </setTarget>
+    <setState drawBuffer="COLOR0" clearColor="true" clearDepth="true">
+         <depth enable="true" value="LESS"/>
+    </setState>
+    <setTransforms module="this.material" worldPos="worldCameraPos"/>
+    <foreach var="l" flag="light">
+        <callMethod name="$l.draw"/>
+    </foreach>
+    <foreach var="o" flag="object" culling="true">
+        <callMethod name="$o.draw"/>
+    </foreach>
+    <setTarget/>
+    <setState>
+         <depth enable="false"/>
+    </setState>
+    <setProgram>
+        <module name="postprocess"/>
+    </setProgram>
+    <drawMesh name="quad"/>
+    <foreach var="o" flag="overlay">
+        <callMethod name="$o.draw"/>
+    </foreach>
+</sequence>

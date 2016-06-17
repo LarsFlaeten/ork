@@ -1,0 +1,16 @@
+<?xml version="1.0" ?>
+<sequence>
+    <setState>
+         <depth enable="true" value="LESS"/>
+    </setState>
+    <setTransforms module="this.material" worldPos="worldCameraPos"/>
+    <foreach var="l" flag="light">
+        <callMethod name="$l.draw"/>
+    </foreach>
+    <foreach var="o" flag="object" culling="true">
+        <callMethod name="$o.draw"/>
+    </foreach>
+    <foreach var="o" flag="overlay">
+        <callMethod name="$o.draw"/>
+    </foreach>
+</sequence>

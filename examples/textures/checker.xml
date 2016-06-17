@@ -1,0 +1,2 @@
+<?xml version="1.0" ?>
+<texture2D name="checker" source="checker.png" internalformat="RGB8" min="LINEAR_MIPMAP_LINEAR" mag="LINEAR"/>

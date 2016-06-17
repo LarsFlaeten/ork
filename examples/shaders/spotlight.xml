@@ -1,0 +1,6 @@
+<?xml version="1.0" ?>
+<module name="spotlight" version="330" source="spotlight.glsl">
+    <uniform3f name="worldLightPos" x="3" y="3" z="3"/>
+    <uniform3f name="worldLightDir" x="-0.5" y="-0.5" z="-0.707107"/>
+    <uniform2f name="spotlightAngle" x="0.4" y="0.6"/>
+</module>

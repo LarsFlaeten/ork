@@ -1,0 +1,2 @@
+<?xml version="1.0" ?>
+<texture2D name="offscreenDepth" internalformat="DEPTH_COMPONENT32F" min="NEAREST" mag="NEAREST" format="DEPTH_COMPONENT" width="32" height="32" type="FLOAT"/>

@@ -1,0 +1,4 @@
+<?xml version="1.0" ?>
+<module name="texturedPlastic" version="330" source="texturedPlastic.glsl">
+    <uniformSampler name="tex" texture="checker"/>
+</module>

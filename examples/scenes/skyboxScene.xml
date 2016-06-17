@@ -1,0 +1,19 @@
+<?xml version="1.0" ?>
+<node>
+    <node flags="camera">
+        <module id="material" value="camera"/>
+        <method id="draw" value="cameraMethod"/>
+    </node>
+    <node name="cubemap" flags="object">
+        <bounds xmin="-1e30" xmax="1e30" ymin="-1e30" ymax="1e30" zmin="-1e30" zmax="1e30"/>
+        <mesh id="geometry" value="quad.mesh"/>
+        <method id="draw" value="skyboxMethod"/>
+        <module id="material" value="skyboxArray"/>
+    </node>
+    <node flags="overlay">
+        <method id="draw" value="logMethod"/>
+    </node>
+    <node flags="overlay">
+        <method id="draw" value="infoMethod"/>
+    </node>
+</node>

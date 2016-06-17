@@ -1,0 +1,5 @@
+<?xml version="1.0" ?>
+<module name="skybox" version="400" source="skybox.glsl" options="CUBEMAPARRAY">
+    <uniformSampler name="skymap" texture="cubemapArray"/>
+    <uniform1f name="map" x="0.0"/>
+</module>

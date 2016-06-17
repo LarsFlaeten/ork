@@ -1,0 +1,2 @@
+<?xml version="1.0" ?>
+<module name="plastic" version="330" vertex="plasticVS.glsl" fragment="plasticFS.glsl"/>
