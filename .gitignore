@@ -3,3 +3,5 @@
 # Ignore bin outut directory
 /bin/
 # Ignore library output directory
+/lib/
+
