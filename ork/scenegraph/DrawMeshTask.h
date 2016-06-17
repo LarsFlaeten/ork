@@ -73,12 +73,11 @@ public:
 
     virtual ptr<Task> getTask(ptr<Object> context);
 
-protected:
     /**
      * Creates an empty DrawMeshTask.
      */
     DrawMeshTask();
-
+protected:
     /**
      * Initializes this DrawMeshTask.
      *
