@@ -82,6 +82,14 @@ public:
         ptr<ResourceDescriptor> desc, const TiXmlElement *e = NULL);
 
     /**
+     * Utility function to dump all the types of resources
+     * Used for debugging
+     * TODO: remove?
+     * */
+    
+    void dumpTypes();
+
+    /**
      * A utility template to automate the registration of new %resource types.
      * @tparam t a %resource type (e.g. texture1D, shader, mesh, etc).
      * @tparam T the corresponding concrete Resource class. This class must be

@@ -63,6 +63,16 @@ void ResourceFactory::addType(const string &type, createFunc f)
     types[type] = f;
 }
 
+void ResourceFactory::dumpTypes()
+{
+	std::map<std::string, createFunc>::iterator i;
+	for(i = types.begin(); i != types.end(); ++i)
+		cout << i->first << endl;
+
+
+}
+
+
 ptr<Object> ResourceFactory::create(ptr<ResourceManager> manager, const string &name,
         ptr<ResourceDescriptor> desc, const TiXmlElement *e)
 {
