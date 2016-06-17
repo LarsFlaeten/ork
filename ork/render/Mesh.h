@@ -44,6 +44,8 @@
 
 #include <cstring> // for memcpy
 
+#include <GL/glew.h>
+
 #include "ork/render/CPUBuffer.h"
 #include "ork/render/GPUBuffer.h"
 #include "ork/render/MeshBuffers.h"
@@ -209,6 +211,7 @@ public:
      */
     inline void clearBuffers();
 
+
 private:
     /**
      * The usage of this mesh.
@@ -299,13 +302,11 @@ private:
      * Resizes the indice array to expand its capacity.
      */
     void resizeIndices(int newSize);
-
     /**
      * Creates the CPU of GPU buffers based on the current content of the
      * vertex and indice arrays.
      */
     void createBuffers() const;
-
     /**
      * Send the vertices to the GPU.
      */
@@ -323,6 +324,10 @@ template<class vertex, class index>
 Mesh<vertex, index>::Mesh(MeshMode m, MeshUsage usage, int vertexCount, int indiceCount) :
     Object("Mesh"), usage(usage), vertexBuffer(NULL), indexBuffer(NULL), created(false), m(m), buffers(new MeshBuffers())
 {
+	// Lars added check since CPU mesh(VB) does not allways work:
+	// Block this until CPUBuffers are fixed
+    // TODO: Remove when CPUBuffers have been fixed
+    assert(usage != CPU);
     vertices = new vertex[vertexCount];
     verticesLength = vertexCount;
     verticesCount = 0;
@@ -339,6 +344,10 @@ template<class vertex, class index>
 Mesh<vertex, index>::Mesh(ptr<MeshBuffers> target, MeshMode m, MeshUsage usage, int vertexCount, int indiceCount) :
     Object("Mesh"), usage(usage), created(false), m(m), buffers(target)
 {
+   	// Lars added check since CPU mesh(VB) does not work:
+	// Block this until CPUBuffers are fixed
+    // TODO: Remove when CPUBuffers have been fixed
+    assert(usage != CPU);
     vertices = new vertex[vertexCount];
     verticesLength = vertexCount;
     verticesCount = 0;
@@ -619,6 +628,8 @@ void Mesh<vertex, index>::createBuffers() const
     buffers->nindices = indicesCount;
     created = true;
 }
+
+
 
 }
 
