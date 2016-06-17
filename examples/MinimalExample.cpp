@@ -55,7 +55,8 @@ public:
 
     MinimalExample() : GlutWindow(Window::Parameters().size(512, 512))
     {
-        // creates a mesh whose vertices, made of vec2f, form triangle strips,
+
+	// creates a mesh whose vertices, made of vec2f, form triangle strips,
         // and which is stored on GPU and not frequently modified
         m = new Mesh<vec2f, unsigned int>(TRIANGLE_STRIP, GPU_STATIC);
         // adds a vertex attribute of id #0, made of two float coordinates
@@ -63,10 +64,10 @@ public:
         // adds four vertices to the mesh
         m->addVertex(vec2f(-1, -1));
         m->addVertex(vec2f(+1, -1));
-        m->addVertex(vec2f(-1, +1));
+        //m->addVertex(vec2f(0.0f,1.0f));
+	m->addVertex(vec2f(-1, +1));
         m->addVertex(vec2f(+1, +1));
-
-        // creates a 2D texture with 4x4 pixels, using one 8bits channel
+	// creates a 2D texture with 4x4 pixels, using one 8bits channel
         // per pixel, with a magnification filter in nearest mode
         unsigned char data[16] = { 0, 255, 0, 255, 255, 0, 255, 0, 0, 255, 0, 255, 255, 0, 255, 0 };
         ptr<Texture2D> tex = new Texture2D(4, 4, R8, RED, UNSIGNED_BYTE,
@@ -74,12 +75,18 @@ public:
 
         // creates a program made of a single module,
         // itself made of a single fragment shader
-        p = new Program(new Module(330, NULL, "\
+        p = new Program(new Module(330, 
+		"\
+		layout(location = 0) in vec3 vertexPosition_modelspace;\n\
+		void main(){\n\
+		  gl_Position.xyz = vertexPosition_modelspace;\n\
+		  gl_Position.w = 1.0;\n\
+		}\n",		 "\
             uniform sampler2D sampler;\n\
             uniform vec2 scale;\n\
             layout(location = 0) out vec4 data;\n\
             void main() {\n\
-                data = texture(sampler, gl_FragCoord.xy * scale).rrrr;\n\
+                data = texture( sampler, gl_FragCoord.xy * scale ).rrrr;\n\
             }\n"));
 
         // sets the "sampler" uniform of 'p' to 'tex'
