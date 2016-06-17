@@ -23,3 +23,6 @@ With the Ork API you simply need two steps (and the first one does not need to b
     myFramebuffer->draw(myProgram, *myMesh);
 ```
 
+## My contribution
+I am playing with integrating Proland in a project, and Proland runs on Ork. Since Ork does not allways build and run out of the box, the are some modifications to be done.
+
