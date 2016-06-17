@@ -44,6 +44,8 @@
 
 #include <map>
 
+#include <GL/glew.h>
+
 #include "ork/math/vec2.h"
 #include "ork/core/Timer.h"
 #include "ork/ui/Window.h"
@@ -83,6 +85,9 @@ public:
 
     virtual void idle(bool damaged);
 
+	// new method to try to exit more cleanly due to memoery leaks
+    virtual void shutDown();
+
 private:
     /**
      * The Window instances. Maps window id to Window instances.
@@ -118,6 +123,12 @@ private:
      * The elapsed time bewteen the two previous calls to #redisplay.
      */
     double dt;
+
+    /**
+     * The handle to the VAO
+     * Lars F addition 16.05.2016
+     */
+    GLuint vao;
 
     /**
      * GLUT callback that calls #redisplay on the active Window.

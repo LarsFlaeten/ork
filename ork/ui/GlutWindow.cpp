@@ -61,73 +61,14 @@
 #define GLUT_WHEEL_DOWN_BUTTON 0x0004
 #endif
 
-#ifndef CALLBACK
-#define CALLBACK
-#endif
+#include "DebugCallback.h"
 
 using namespace std;
 
 namespace ork
 {
 
-void CALLBACK debugCallback(unsigned int source, unsigned int type,
-    unsigned int id, unsigned int severity,
-    int length, const char* message, void* userParam)
-{
-    char debSource[16];
-    switch (source) {
-    case GL_DEBUG_SOURCE_API_ARB:
-        strcpy(debSource, "OPENGL");
-        break;
-    case GL_DEBUG_SOURCE_WINDOW_SYSTEM_ARB:
-        strcpy(debSource, "WINDOWS");
-        break;
-    case GL_DEBUG_SOURCE_SHADER_COMPILER_ARB:
-        strcpy(debSource, "COMPILER");
-        break;
-    case GL_DEBUG_SOURCE_THIRD_PARTY_ARB:
-        strcpy(debSource, "LIBRARY");
-        break;
-    case GL_DEBUG_SOURCE_APPLICATION_ARB:
-        strcpy(debSource, "APPLICATION");
-        break;
-    //case GL_DEBUG_SOURCE_OTHER_ARB:
-    default:
-        strcpy(debSource, "UNKNOWN");
-    }
 
-    char debType[20];
-    switch (type) {
-    case GL_DEBUG_TYPE_ERROR_ARB:
-        strcpy(debType, "Error");
-        break;
-    case GL_DEBUG_TYPE_DEPRECATED_BEHAVIOR_ARB:
-        strcpy(debType, "Deprecated behavior");
-        break;
-    case GL_DEBUG_TYPE_UNDEFINED_BEHAVIOR_ARB:
-        strcpy(debType, "Undefined behavior");
-        break;
-    case GL_DEBUG_TYPE_PORTABILITY_ARB:
-        strcpy(debType, "Portability");
-        break;
-    case GL_DEBUG_TYPE_PERFORMANCE_ARB:
-        strcpy(debType, "Performance");
-        break;
-    //case GL_DEBUG_TYPE_OTHER_ARB:
-    default:
-        strcpy(debType, "Other");
-    }
-
-    if (severity == GL_DEBUG_SEVERITY_HIGH_ARB && Logger::ERROR_LOGGER != NULL) {
-        Logger::ERROR_LOGGER->logf(debSource, "%s: %s", debType, message);
-    }
-    if (severity == GL_DEBUG_SEVERITY_MEDIUM_ARB && Logger::WARNING_LOGGER != NULL) {
-        Logger::WARNING_LOGGER->logf(debSource, "%s: %s", debType, message);
-    }
-    if (severity == GL_DEBUG_SEVERITY_LOW_ARB && Logger::INFO_LOGGER != NULL) {
-        Logger::INFO_LOGGER->logf(debSource, "%s: %s", debType, message);
-    }
-}
 
 map<int, GlutWindow*> GlutWindow::INSTANCES;
 
@@ -135,7 +76,8 @@ GlutWindow::GlutWindow(const Parameters &params) : Window(params)
 {
     int argc = 1;
     char *argv[1] = { (char*) "dummy" };
-    if (INSTANCES.size() == 0) {
+	int x = INSTANCES.size();
+    if (x == 0) {
         glutInit(&argc, argv);
     }
     glutInitDisplayMode(GLUT_DOUBLE |
@@ -143,6 +85,8 @@ GlutWindow::GlutWindow(const Parameters &params) : Window(params)
         (params.depth() ? GLUT_DEPTH : 0) |
         (params.stencil() ? GLUT_STENCIL : 0) |
         (params.multiSample() ? GLUT_MULTISAMPLE : 0));
+	
+    glGetError();
 
 #ifdef USEFREEGLUT
     //Init OpenGL context
@@ -165,6 +109,9 @@ GlutWindow::GlutWindow(const Parameters &params) : Window(params)
     if (false) {
         glutCreateMenu(NULL);//do nothing, only used to avoid a warning
     }
+     
+    glGetError();
+
 
     INSTANCES[windowId] = this;
     glutDisplayFunc(redisplayFunc);
@@ -185,6 +132,7 @@ GlutWindow::GlutWindow(const Parameters &params) : Window(params)
 
     assert(glGetError() == 0);
     glewExperimental = GL_TRUE;
+    glGetError();
     glewInit();
     glGetError();
 
@@ -194,15 +142,30 @@ GlutWindow::GlutWindow(const Parameters &params) : Window(params)
         glDebugMessageCallbackARB(debugCallback, NULL);
     }
 #endif
+    // Lars F addtion 16.05.2016
+    glGenVertexArrays(1, &vao);
+    glBindVertexArray(vao);
 }
 
 GlutWindow::~GlutWindow()
 {
+    // Lars F addition 16.05.2016
+    glDeleteVertexArrays(1, &vao);
+
 #ifdef USEFREEGLUT
+    // Commented out due to error message from glut
+    // (complains glutInit has notbeen called...
     glutDestroyWindow(windowId);
     glutLeaveMainLoop();
 #endif
     INSTANCES.erase(windowId);
+}
+
+void GlutWindow::shutDown()
+{
+	//glutDestroyWindow(windowId);
+	glutLeaveMainLoop();
+
 }
 
 int GlutWindow::getWidth() const
