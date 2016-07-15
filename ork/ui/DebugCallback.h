@@ -50,7 +50,7 @@ namespace ork
 
 void CALLBACK debugCallback(unsigned int source, unsigned int type,
     unsigned int id, unsigned int severity,
-    int length, const char* message, void* userParam);
+    int length, const char* message, const void* userParam);
 
 }
 
