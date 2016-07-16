@@ -69,6 +69,8 @@ public:
         m->addVertex(vec2f(+1, +1));
 	// creates a 2D texture with 4x4 pixels, using one 8bits channel
         // per pixel, with a magnification filter in nearest mode
+        assert(FrameBuffer::getError()==0);
+
         unsigned char data[16] = { 0, 255, 0, 255, 255, 0, 255, 0, 0, 255, 0, 255, 255, 0, 255, 0 };
         ptr<Texture2D> tex = new Texture2D(4, 4, R8, RED, UNSIGNED_BYTE,
             Texture::Parameters().mag(NEAREST), Buffer::Parameters(), CPUBuffer(data));
