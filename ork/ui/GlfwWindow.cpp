@@ -55,12 +55,13 @@
 using namespace std;
 
 //TODO:
-//- User pointer stores GLFW window instance, instead of statuc INSTANCE vector from the original Ork implementation
-//- Damaged / refresh callbakc?
-//- Enable adjutsing swap interval
-//- remove unused callbacks from glut
-//- generalcleanup
-
+//XX User pointer stores GLFW window instance, instead of static INSTANCE map
+//-  Damaged / refresh callback?
+//-  Mouse enter/leave callback?
+//XX Enable adjusting swap interval
+//XX Remove unused callbacks from glut
+//-  General cleanup
+//-  Enable fullscreen
 
 
 namespace ork
@@ -120,13 +121,7 @@ GlfwWindow::GlfwWindow(const Parameters &params) : Window(params), glfwWindowHan
 
     /*
      * TODO: Add possibility to go fullscreen
-    if (params.width() == 0 && params.height() == 0) {
-        glutFullScreen();
-    }
-    if (false) {
-        glutCreateMenu(NULL);//do nothing, only used to avoid a warning
-    }
-*/     
+     */     
 
     // Ensure we can capture the escape key being pressed below
     glfwSetInputMode(gwd, GLFW_STICKY_KEYS, GL_TRUE);
@@ -134,14 +129,11 @@ GlfwWindow::GlfwWindow(const Parameters &params) : Window(params), glfwWindowHan
 
 
     // Set up callbacks
-//    glutDisplayFunc(redisplayFunc);
     glfwSetWindowSizeCallback(gwd, reshapeFunc);
     glfwSetWindowFocusCallback(gwd, focusFunc);
-//    glutIdleFunc(idleFunc);
     glfwSetCursorPosCallback(gwd, mouseMotionFunc);
     glfwSetScrollCallback(gwd, scrollFunc);
     glfwSetKeyCallback(gwd, keyCallback);
-//    glutIgnoreKeyRepeat(1);
 /*
     // should be mouse enter/leave events,
     // but implemented in freeglut with get/loose focus

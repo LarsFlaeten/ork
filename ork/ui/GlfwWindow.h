@@ -183,26 +183,6 @@ private:
     static void keyCallback(GLFWwindow* window, int key, int scancode, int action, int mods);
 
     /**
-     * Glfw callback that calls #keyTyped on the active Window.
-     */
-    static void keyboardFunc(unsigned char c, int x, int y);
-
-    /**
-     * Glfw callback that calls #keyReleased on the active Window.
-     */
-    static void keyboardUpFunc(unsigned char c, int x, int y);
-
-    /**
-     * Glfw callback that calls #specialKey on the active Window.
-     */
-    static void specialKeyFunc(int c, int x, int y);
-
-    /**
-     * Glfw callback that calls #specialKeyReleased on the active Window.
-     */
-    static void specialKeyUpFunc(int c, int x, int y);
-
-    /**
      * Glfw callback for focus events.
      */
     static void focusFunc(GLFWwindow* window, int focus);
@@ -214,7 +194,8 @@ private:
 
 
     /**
-     * Utility function
+     * Utility function to check wether shift, ctrl or alt
+     * has been pressed
      */
     static EventHandler::modifier getModifiers(GLFWwindow* wd);
 
