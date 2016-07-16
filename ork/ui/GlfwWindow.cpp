@@ -43,41 +43,45 @@
 
 #include "ork/core/Logger.h"
 
-#include <GL/glew.h>
+//#include <GL/glew.h>
 
-#include <GLFW/glfw3.h>
+//#include <GLFW/glfw3.h>
 
 #include <assert.h>
+#include <stdexcept>
 
 #include "DebugCallback.h"
 
 using namespace std;
 
+//TODO:
+//- User pointer stores GLFW window instance, instead of statuc INSTANCE vector from the original Ork implementation
+//- Damaged / refresh callbakc?
+//- Enable adjutsing swap interval
+//- remove unused callbacks from glut
+//- generalcleanup
+
+
+
 namespace ork
 {
 
-map<int, GlfwWindow*> GlfwWindow::INSTANCES;
 
 GlfwWindow::GlfwWindow(const Parameters &params) : Window(params), glfwWindowHandle(NULL)
 {
-    // TODO
-    // Implement glfw user pointers:
+    // Implemented glfw user pointers:
     // http://stackoverflow.com/questions/7676971/pointing-to-a-function-that-is-a-class-member-glfw-setkeycallback
 
+    // We start with allocating the error callback:
+    glfwSetErrorCallback(errorCallback);
 
-//    int argc = 1;
-//    char *argv[1] = { (char*) "dummy" };
-	int x = INSTANCES.size();
-    if (x == 0) {
-        if(!glfwInit() && Logger::ERROR_LOGGER != NULL)
-        {
-            Logger::ERROR_LOGGER->log("UI", "Could not init GLFW");
-            Logger::ERROR_LOGGER->flush();
-            return;
-        }
-
+    // Initialise GLFW
+    if( !glfwInit() )
+    {
+        Logger::ERROR_LOGGER->log("UI", "Could not init GLFW!");
+        Logger::ERROR_LOGGER->flush();
+        return;
     }
-
     glfwWindowHint(GLFW_SAMPLES, 4);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
@@ -97,50 +101,25 @@ GlfwWindow::GlfwWindow(const Parameters &params) : Window(params), glfwWindowHan
     }
 
 
-/*    glutInitDisplayMode(GLUT_DOUBLE |
-        (params.alpha() ? GLUT_ALPHA : 0) |
-        (params.depth() ? GLUT_DEPTH : 0) |
-        (params.stencil() ? GLUT_STENCIL : 0) |
-        (params.multiSample() ? GLUT_MULTISAMPLE : 0));
-*/	
-    glGetError();
-/*
-#ifdef USEFREEGLUT
-    //Init OpenGL context
-    glutInitContextVersion(params.version().x, params.version().y);
-    glutInitContextProfile(GLUT_CORE_PROFILE);
-    glutInitContextFlags(GLUT_FORWARD_COMPATIBLE | (params.debug() ? GLUT_DEBUG : 0));
-#endif
-
-    glutInitWindowSize(params.width(), params.height());
-*/
-    
-    // Only allow single window for now
-    // to simplify things
-    // TODO: Allow formultiple windows
-    // There is an implemntation here:
-    // https://blog.gvnott.com/2013/05/18/tutorial-multiple-windows-with-glfw3-and-glew-mx/ 
-    windowId = 1;
-    if(INSTANCES.size()>0)
-    {
-        Logger::ERROR_LOGGER->log("UI", "Onlye one window instance allowed in curent implementation");
-        Logger::ERROR_LOGGER->flush();
-        glfwTerminate();
-        return;
-    }
-    INSTANCES[windowId] = this;
-
     // Here we get the actual size we got from glfw
     // May not be the same as given as "hint"?
     int width, height;
-    glfwGetWindowSize(gwd, &width, &height);
-    size = vec2i(width, height);
+    glfwGetFramebufferSize(gwd, &width, &height);
+    
+    // We should also call reshape function, as GLUT does,
+    // since some of the examples sets a few states based on this,
+    // however since we are in CTOR now, the derived function will not
+    // be calles. Examples that rely on setting states in reshape
+    // must provide an initial value (See e.g. minimalglfw)..
+    reshape(width, height);
 
     damaged = false;
     timer.start();
     t = 0.0;
     dt = 0.0;
-/*
+
+    /*
+     * TODO: Add possibility to go fullscreen
     if (params.width() == 0 && params.height() == 0) {
         glutFullScreen();
     }
@@ -148,37 +127,56 @@ GlfwWindow::GlfwWindow(const Parameters &params) : Window(params), glfwWindowHan
         glutCreateMenu(NULL);//do nothing, only used to avoid a warning
     }
 */     
-    glGetError();
+
+    // Ensure we can capture the escape key being pressed below
+    glfwSetInputMode(gwd, GLFW_STICKY_KEYS, GL_TRUE);
+           
+
 
     // Set up callbacks
 //    glutDisplayFunc(redisplayFunc);
-//    glutReshapeFunc(reshapeFunc);
-    glfwSetWindowSizeCallBack(gwd, reshapeFunc);
+    glfwSetWindowSizeCallback(gwd, reshapeFunc);
+    glfwSetWindowFocusCallback(gwd, focusFunc);
 //    glutIdleFunc(idleFunc);
-//    glutMouseFunc(mouseClickFunc);
-//    glutMotionFunc(mouseMotionFunc);
-//    glutPassiveMotionFunc(mousePassiveMotionFunc);
-//    glutKeyboardFunc(keyboardFunc);
-//    glutKeyboardUpFunc(keyboardUpFunc);
-//    glutSpecialFunc(specialKeyFunc);
-//    glutSpecialUpFunc(specialKeyUpFunc);
+    glfwSetCursorPosCallback(gwd, mouseMotionFunc);
+    glfwSetScrollCallback(gwd, scrollFunc);
+    glfwSetKeyCallback(gwd, keyCallback);
 //    glutIgnoreKeyRepeat(1);
 /*
     // should be mouse enter/leave events,
     // but implemented in freeglut with get/loose focus
     glutEntryFunc(focusFunc);
 */
-    assert(glGetError() == 0);
+
+    // The last thing is to assign this as the user pointer:
+    glfwSetWindowUserPointer(gwd, (void*)this);
+
+
     glewExperimental = GL_TRUE;
-    glGetError();
-    if((glewInit() != GLEW_OK || glGetError()!=0) && Logger::ERROR_LOGGER != NULL)
+    glfwMakeContextCurrent(gwd);
+    assert(glGetError() == 0);
+    
+    GLenum err = glewInit(); 
+    // Check and flush glGetError(). We can often get an 1280 here,
+    // which is tolerated, but should be caught here.
+    GLenum errAfterGlewInit = glGetError();
+    if (GLEW_OK != err || !(errAfterGlewInit==GL_NO_ERROR || errAfterGlewInit==GL_INVALID_ENUM))
     {
-        Logger::ERROR_LOGGER->log("UI", "Could not init GLEW!");
-        Logger::ERROR_LOGGER->flush();
+        /*  Problem: glewInit failed, something is seriously wrong. */
+        if(Logger::ERROR_LOGGER != NULL)
+        {
+            Logger::ERROR_LOGGER->logf("UI", "Could not init GLEW, Error: %s", glewGetErrorString(err));
+            Logger::ERROR_LOGGER->flush();
+        }
         glfwTerminate();
         return;
+ 
     }
+                                
+        
 
+    Logger::INFO_LOGGER->logf("UI", "Status: Using GLEW %s\n", glewGetString(GLEW_VERSION));
+    Logger::INFO_LOGGER->flush(); 
 
     if (params.debug()) {
         assert(glDebugMessageCallbackARB != NULL);
@@ -187,8 +185,10 @@ GlfwWindow::GlfwWindow(const Parameters &params) : Window(params), glfwWindowHan
     
     
     // Lars F addtion 16.05.2016
+    assert(glGetError()==0);
     glGenVertexArrays(1, &vao);
     glBindVertexArray(vao);
+    assert(glGetError()==0);
 }
 
 GlfwWindow::~GlfwWindow()
@@ -196,17 +196,10 @@ GlfwWindow::~GlfwWindow()
     // Lars F addition 16.05.2016
     glDeleteVertexArrays(1, &vao);
 
-    glfwTerminate();
-    
-    INSTANCES.erase(windowId);
-}
+}    
 
-/*void GlfwWindow::shutDown()
-{
-	glfwTerminate();
 
-}
-*/
+
 int GlfwWindow::getWidth() const
 {
     return size.x;
@@ -219,8 +212,21 @@ int GlfwWindow::getHeight() const
 
 void GlfwWindow::start()
 {
-    //TODO:
-    //Implement main loop here
+    // Do the reshape call, as a lot of the ork/proland
+    // apps are setting variables based on this:
+    this->reshape(this->getWidth(), this->getHeight());
+    
+    do{
+           
+        this->redisplay(t, dt);
+
+        glfwPollEvents();
+        
+        
+        
+    } while(glfwWindowShouldClose((GLFWwindow*)glfwWindowHandle)==0);
+
+    glfwTerminate();
 }
 
 void GlfwWindow::redisplay(double t, double dt)
@@ -243,99 +249,201 @@ void GlfwWindow::idle(bool damaged)
 
 void GlfwWindow::redisplayFunc()
 {
+    throw std::runtime_error("Not implemented");
     // TODO: modify for multiple windows
-    GlfwWindow* window = INSTANCES[1];
-    window->redisplay(window->t, window->dt);
+    //GlfwWindow* window = INSTANCES[1];
+    ////window->redisplay(window->t, window->dt);
 }
 
-void GlfwWindow::reshapeFunc(GLFWwindow*, int w, int h)
+void GlfwWindow::reshapeFunc(GLFWwindow* window, int w, int h)
 {
-    // TODO: modify for multiple windows
-    INSTANCES[1]->reshape(x, y);
+    GlfwWindow* gw = static_cast<GlfwWindow*>(glfwGetWindowUserPointer(window));
+    gw->reshape(w, h);
 }
 
-void GlfwWindow::idleFunc()
+/*void GlfwWindow::idleFunc()
 {
-    // TODO: modify for multiple windows
-    GlfwWindow *window = INSTANCES[1];
+    
+    GlfwWindow* gw = static_cast<GlfwWindow*>(glfwGetWindowUserPointer(window));
     // glutLayerGet(GLUT_NORMAL_DAMAGED) is not implemented in freeglut
     //window->idle(glutLayerGet(GLUT_NORMAL_DAMAGED) == 1);
-    window->idle(window->damaged);
-    window->damaged = false;
+    gw->idle(window->damaged);
+    gw->damaged = false;
 }
-
-void GlfwWindow::mouseClickFunc(int b, int s, int x, int y)
-{
-/*    int m = glutGetModifiers();
-
-#ifdef GLUT_WHEEL_UP
-    if (b == GLUT_WHEEL_UP) {
-#else
-    if (b == GLUT_WHEEL_UP_BUTTON) {
-        if (s == 0)
-#endif
-        INSTANCES[glutGetWindow()]->mouseWheel(WHEEL_UP, (modifier) m, x, y);
-        return;
-    }
-
-#ifdef GLUT_WHEEL_DOWN
-    if (b == GLUT_WHEEL_DOWN) {
-#else
-    if (b == GLUT_WHEEL_DOWN_BUTTON) {
-        if (s == 0)
-#endif
-        INSTANCES[glutGetWindow()]->mouseWheel(WHEEL_DOWN, (modifier) m, x, y);
-        return;
-    }
-
-    INSTANCES[glutGetWindow()]->mouseClick((button) b, (state) s, (modifier) m, x, y);
 */
+void GlfwWindow::mouseClickFunc(GLFWwindow* window, int mousebutton, int action, int mods)
+{
+    // Translate to Ork mouse messages
+    EventHandler::button b;
+    switch(mousebutton) {
+        case GLFW_MOUSE_BUTTON_RIGHT:
+            b = EventHandler::RIGHT_BUTTON;
+            break;
+        case GLFW_MOUSE_BUTTON_LEFT:
+            b = EventHandler::LEFT_BUTTON;
+            break;
+        case GLFW_MOUSE_BUTTON_MIDDLE:
+            b = EventHandler::MIDDLE_BUTTON;
+            break;
+        default:
+            break;
+    }
+    
+    EventHandler::state s;
+    if(action==GLFW_PRESS)
+        s = EventHandler::DOWN;
+    else if(action==GLFW_RELEASE)
+        s = EventHandler::UP;
+
+    // Check for modifier keys:
+    EventHandler::modifier m = getModifiers(window);
+
+    // Get the mous cordinates:
+    double xpos, ypos;
+    glfwGetCursorPos(window, &xpos, &ypos);
+
+
+    // Call the class method:
+    GlfwWindow* gw = static_cast<GlfwWindow*>(glfwGetWindowUserPointer(window));
+    gw->mouseClick(b, s, m, static_cast<int>(xpos),static_cast<int>(ypos));
+
+
 }
 
-void GlfwWindow::mouseMotionFunc(int x, int y)
+void GlfwWindow::scrollFunc(GLFWwindow* window, double scrollx,double scrolly)
 {
-     // TODO: modify for multiple windows
-    INSTANCES[1]->mouseMotion(x, y);
+    // Get modifiers:
+    EventHandler::modifier m = getModifiers(window);
+
+    // Mouse wheel provides y-scroll:
+    // We discard x-scroll for now...
+    EventHandler::wheel w;
+    if(scrolly != 0.0) {
+
+        if(scrolly < 0.0)
+            w = WHEEL_DOWN; // Correct orientation?
+        if(scrolly > 0.0)
+            w = WHEEL_UP;
+
+        // Get the mous cordinates:
+        double xpos, ypos;
+        glfwGetCursorPos(window, &xpos, &ypos);
+          
+          
+        // Call the class method:
+        GlfwWindow* gw = static_cast<GlfwWindow*>(glfwGetWindowUserPointer(window));
+        gw->mouseWheel(w, m, static_cast<int>(xpos),static_cast<int>(ypos));
+    }
 }
 
-void GlfwWindow::mousePassiveMotionFunc(int x, int y)
+void GlfwWindow::mouseMotionFunc(GLFWwindow* window, double  x, double y)
 {
-     // TODO: modify for multiple windows
-    INSTANCES[1]->mousePassiveMotion(x, y);
+    GlfwWindow* gw = static_cast<GlfwWindow*>(glfwGetWindowUserPointer(window));
+    gw->mouseMotion(
+            static_cast<int>(x),
+            static_cast<int>(y));
+    gw->mousePassiveMotion(
+            static_cast<int>(x),
+            static_cast<int>(y));
 }
 
-void GlfwWindow::keyboardFunc(unsigned char c, int x, int y)
+void GlfwWindow::mouseEnterLeaveFunc(GLFWwindow* window, int entered)
 {
-/*    int m = glutGetModifiers();
-     // TODO: modify for multiple windows
-    INSTANCES[1]->keyTyped(c, (modifier) m, x, y);
-*/}
+    GlfwWindow* gw = static_cast<GlfwWindow*>(glfwGetWindowUserPointer(window));
+    // TO BE IMPLEMENTED
+}
 
-void GlfwWindow::keyboardUpFunc(unsigned char c, int x, int y)
+void GlfwWindow::keyCallback(GLFWwindow* window, int key, int scancode, int action, int     mods)
 {
-/*    int m = glutGetModifiers();
-     // TODO: modify for multiple windows
-    INSTANCES[1]->keyReleased(c, (modifier) m, x, y);
-*/}
+    // Get modifiers:
+    EventHandler::modifier m = getModifiers(window);
+    
+    // Get the mous cordinates:
+    double xpos, ypos;
+    glfwGetCursorPos(window, &xpos, &ypos);
+    
+    GlfwWindow* gw = static_cast<GlfwWindow*>(glfwGetWindowUserPointer(window));
+    
+    // Translate the key.
+    // If 32 <= key <= 92, we pass through as a char
+    if(key >= 32 && key <= 96)
+    {
+        char c = (unsigned char)key;
 
-void GlfwWindow::specialKeyFunc(int k, int x, int y)
-{
-/*    int m = glutGetModifiers();
-     // TODO: modify for multiple windows
-    INSTANCES[1]->specialKey((key) k, (modifier) m, x, y);
-*/}
+        if(action==GLFW_PRESS)
+            gw->keyTyped(c, m,
+                static_cast<int>(xpos),
+                static_cast<int>(ypos));
+        else
+            gw->keyReleased(c, m,
+                static_cast<int>(xpos),
+                static_cast<int>(ypos));
+    } else if(key >= 256 && key <= 348) 
+    {
+        // GLFWs 256 and up are special keys
+        EventHandler::key k = static_cast<EventHandler::key>(key);
+    
+        if(action==GLFW_PRESS)
+            gw->specialKey(k, m,
+                static_cast<int>(xpos),
+                static_cast<int>(ypos));
+        else
+            gw->specialKeyReleased(k, m,
+                static_cast<int>(xpos),
+                static_cast<int>(ypos));
+    } else
+        throw runtime_error("key decoder failed");
+}
 
-void GlfwWindow::specialKeyUpFunc(int k, int x, int y)
-{
-/*    int m = glutGetModifiers();
-     // TODO: modify for multiple windows
-    INSTANCES[1]->specialKeyReleased((key) k, (modifier) m, x, y);
-*/}
 
-void GlfwWindow::focusFunc(int focus)
+
+void GlfwWindow::focusFunc(GLFWwindow* window, int focus)
 {
-    // TODO: modify for multiple windows
-    INSTANCES[1]->damaged = (focus != 0);
+    GlfwWindow* gw = static_cast<GlfwWindow*>(glfwGetWindowUserPointer(window));  
+    gw->damaged = (focus != 0);
+
+    // From glfw docs:
+    if(focus){
+        // Window got focus
+    } else
+    {
+        // Window lost focus
+    }
+}
+
+void GlfwWindow::errorCallback(int error, const char* message)
+{
+    throw std::runtime_error(message);
+}
+
+EventHandler::modifier GlfwWindow::getModifiers(GLFWwindow* window)
+{
+    int key1, key2; EventHandler::modifier m = EventHandler::NONE;
+    key1 = glfwGetKey(window, GLFW_KEY_LEFT_SHIFT);
+    key2 = glfwGetKey(window, GLFW_KEY_RIGHT_SHIFT);
+    if(key1 == GLFW_PRESS || key2 == GLFW_PRESS)
+        m = EventHandler::SHIFT;
+                    
+    key1 = glfwGetKey(window, GLFW_KEY_LEFT_CONTROL);
+    key2 = glfwGetKey(window, GLFW_KEY_RIGHT_CONTROL);
+    if(key1 == GLFW_PRESS || key2 == GLFW_PRESS)
+        m = EventHandler::CTRL;
+                                   
+    key1 = glfwGetKey(window, GLFW_KEY_LEFT_ALT);
+    key2 = glfwGetKey(window, GLFW_KEY_RIGHT_ALT);
+    if(key1 == GLFW_PRESS || key2 == GLFW_PRESS)
+        m = EventHandler::ALT;
+
+    return m;
+}
+
+void    GlfwWindow::WaitForVSync(bool wait)
+{
+    if(wait)
+        glfwSwapInterval(1);
+    else
+        glfwSwapInterval(0);
+
 }
 
 }

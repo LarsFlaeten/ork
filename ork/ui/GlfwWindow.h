@@ -45,6 +45,7 @@
 #include <map>
 
 #include <GL/glew.h>
+#include <GLFW/glfw3.h>
 
 #include "ork/math/vec2.h"
 #include "ork/core/Timer.h"
@@ -56,7 +57,6 @@ namespace ork
 /**
  * A Window implemented using glfw.
  * (c) 2016 Lars Flæten
- * @ingroup ui
  */
 class ORK_API GlfwWindow : public Window
 {
@@ -86,14 +86,19 @@ public:
 
     virtual void idle(bool damaged);
 
-	// new method to try to exit more cleanly due to memory leaks
-    virtual void shutDown();
+
+    /**
+     * Tells the windowing system wether to wait for a vertical
+     * sync or not beofre swapping buffers.
+     */
+    void    WaitForVSync(bool wait);
+
 
 private:
     /**
      * The Window instances. Maps window id to Window instances.
      */
-    static std::map<int, GlfwWindow*> INSTANCES;
+    //static std::map<int, GlfwWindow*> INSTANCES;
 
     /**
      * The id of this window.
@@ -150,22 +155,32 @@ private:
     /**
      * Glfw callback that calls #idle on the active Window.
      */
-    static void idleFunc();
+    //static void idleFunc();
 
     /**
      * Glfw callback that calls #mouseClick on the active Window.
      */
-    static void mouseClickFunc(int button, int state, int x, int y);
+    static void mouseClickFunc(GLFWwindow* window, int button, int action, int mods);
 
+    /**
+     *
+     */
+    static void scrollFunc(GLFWwindow* window, double xScroll, double yScroll);
+    
     /**
      * Glfw callback that calls #mouseMotion on the active Window.
      */
-    static void mouseMotionFunc(int x, int y);
+    static void mouseMotionFunc(GLFWwindow* window, double x, double y);
 
     /**
-     * Glfw callback that calls #mousePassiveMotion on the active Window.
+     * Glfw callback that calls #mouseEnterLeave on the active Window.
      */
-    static void mousePassiveMotionFunc(int x, int y);
+    static void mouseEnterLeaveFunc(GLFWwindow* window, int entered);
+
+    /**
+     * Key callback
+     */
+    static void keyCallback(GLFWwindow* window, int key, int scancode, int action, int mods);
 
     /**
      * Glfw callback that calls #keyTyped on the active Window.
@@ -190,7 +205,20 @@ private:
     /**
      * Glfw callback for focus events.
      */
-    static void focusFunc(int focus);
+    static void focusFunc(GLFWwindow* window, int focus);
+
+    /**
+     * Glfw error callback.
+     */
+    static void errorCallback(int error, const char* message);
+
+
+    /**
+     * Utility function
+     */
+    static EventHandler::modifier getModifiers(GLFWwindow* wd);
+
+
 };
 
 }
