@@ -429,7 +429,7 @@ EventHandler::modifier GlfwWindow::getModifiers(GLFWwindow* window)
     return m;
 }
 
-void    GlfwWindow::WaitForVSync(bool wait)
+void    GlfwWindow::waitForVSync(bool wait)
 {
     if(wait)
         glfwSwapInterval(1);

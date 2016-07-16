@@ -91,7 +91,7 @@ public:
      * Tells the windowing system wether to wait for a vertical
      * sync or not beofre swapping buffers.
      */
-    void    WaitForVSync(bool wait);
+    void    waitForVSync(bool wait);
 
 
 private:
