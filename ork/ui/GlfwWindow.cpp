@@ -134,6 +134,7 @@ GlfwWindow::GlfwWindow(const Parameters &params) : Window(params), glfwWindowHan
     glfwSetCursorPosCallback(gwd, mouseMotionFunc);
     glfwSetScrollCallback(gwd, scrollFunc);
     glfwSetKeyCallback(gwd, keyCallback);
+    glfwSetMouseButtonCallback(gwd, mouseClickFunc);
 /*
     // should be mouse enter/leave events,
     // but implemented in freeglut with get/loose focus
@@ -181,6 +182,10 @@ GlfwWindow::GlfwWindow(const Parameters &params) : Window(params), glfwWindowHan
     glGenVertexArrays(1, &vao);
     glBindVertexArray(vao);
     assert(glGetError()==0);
+
+    // do immeadiate swap
+    this->waitForVSync(false);
+
 }
 
 GlfwWindow::~GlfwWindow()
@@ -200,6 +205,15 @@ int GlfwWindow::getWidth() const
 int GlfwWindow::getHeight() const
 {
     return size.y;
+}
+
+void GlfwWindow::getMousePosition(int* x, int* y)
+{
+    GLFWwindow* gwd = (GLFWwindow*)glfwWindowHandle;
+    double xpos, ypos;
+    glfwGetCursorPos(gwd, &xpos, &ypos);
+    *x = static_cast<int>(xpos);
+    *y = static_cast<int>(ypos);
 }
 
 void GlfwWindow::start()
@@ -331,12 +345,29 @@ void GlfwWindow::scrollFunc(GLFWwindow* window, double scrollx,double scrolly)
 void GlfwWindow::mouseMotionFunc(GLFWwindow* window, double  x, double y)
 {
     GlfwWindow* gw = static_cast<GlfwWindow*>(glfwGetWindowUserPointer(window));
-    gw->mouseMotion(
+    // as the GLUT windows, we call mouseMotion when the mouse is moved
+    // WHILE a button is clicked, an mousePassiveMotion when no buttons
+    // are clicked.
+    // I dont like this setup, and would prefer one motion func regardless
+    // of button presses, but the ork/proland apps heavily use both of these
+    // two methods, so I chose to implement them for GLFW as well
+    
+    // "Poll" the mouse buttons (actually not a poll, but queries
+    // the caches state from glfw):
+    int sl = glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT);
+    int sm = glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_MIDDLE);
+    int sr = glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_RIGHT);
+    if (sl==GLFW_PRESS || sm==GLFW_PRESS || sr==GLFW_PRESS) {
+        gw->mouseMotion(
             static_cast<int>(x),
             static_cast<int>(y));
-    gw->mousePassiveMotion(
+    }
+    else {
+        gw->mousePassiveMotion(
             static_cast<int>(x),
             static_cast<int>(y));
+
+    }
 }
 
 void GlfwWindow::mouseEnterLeaveFunc(GLFWwindow* window, int entered)

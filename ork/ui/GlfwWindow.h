@@ -93,6 +93,10 @@ public:
      */
     void    waitForVSync(bool wait);
 
+    /**
+     * Returns the current mouse cursor position
+     */
+    void    getMousePosition(int* x, int* y);
 
 private:
     /**
