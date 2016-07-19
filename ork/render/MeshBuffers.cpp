@@ -626,14 +626,14 @@ void MeshBuffers::draw(MeshMode m, GLint first, GLsizei count, GLsizei primCount
 #ifndef NDEBUG
     GLenum err = glGetError();
     if (err != 0) {
-        if (Program::CURRENT == NULL || Program::CURRENT->checkSamplers()) {
+        if (Program::CURRENT == NULL || !Program::CURRENT->checkSamplers()) {
             if (Logger::ERROR_LOGGER != NULL) {
                 ostringstream oss;
                 oss << "OpenGL error " << err << ", returned string '" << gluErrorString(err) << "'";
                 Logger::ERROR_LOGGER->log("RENDER", oss.str());
                 Logger::ERROR_LOGGER->flush();
             }
-            assert(err == 0);
+            //assert(err == 0);
         }
     }
 #endif
