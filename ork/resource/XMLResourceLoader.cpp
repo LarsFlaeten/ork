@@ -351,6 +351,8 @@ string XMLResourceLoader::findFile(const TiXmlElement *desc, const vector<string
 unsigned char *XMLResourceLoader::loadFile(const string &file, unsigned int &size)
 {
     ifstream fs(file.c_str(), ios::binary);
+    if(!fs.is_open())
+        throw runtime_error(file + " was not found!");
     fs.seekg(0, ios::end);
     size = fs.tellg();
     unsigned char *data = new unsigned char[size + 1];
