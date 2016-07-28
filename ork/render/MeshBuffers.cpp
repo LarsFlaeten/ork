@@ -633,7 +633,7 @@ void MeshBuffers::draw(MeshMode m, GLint first, GLsizei count, GLsizei primCount
                 Logger::ERROR_LOGGER->log("RENDER", oss.str());
                 Logger::ERROR_LOGGER->flush();
             }
-            //assert(err == 0);
+            assert(err == 0);
         }
     }
 #endif
