@@ -362,6 +362,28 @@ void Module::swap(ptr<Module> s)
     std::swap(initialValues, s->initialValues);
 }
 
+void Module::addDefine(const char* origShader, const char* defineClause,
+                      std::string& newShader)
+{
+    std::stringstream oss;
+    // If define clause is zero, just return original shader source
+    if(defineClause==NULL || defineClause[0]=='\0')
+    {
+        oss << origShader;
+        newShader = oss.str();
+    }
+
+    if(origShader == NULL || origShader[0]=='\0')
+        throw runtime_error("Empty shader source given");
+
+    // Append the define clause before the shader source
+    oss << "#define " << defineClause << std::endl;
+    oss << origShader;
+    newShader = oss.str();
+
+}
+
+
 bool Module::check(int shaderId)
 {
     GLint compiled;

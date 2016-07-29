@@ -193,6 +193,21 @@ public:
      */
     void addInitialValue(ptr<Value> value);
 
+    /**
+     * Utility function, allows to add a define statement in
+     * the start of an allready expressed shader source.
+     * The original shader source is not modified, new shader
+     * source with define appended is given in newShader
+     * @param origShader the original shader source
+     * @param defineClause the define statement to be included. The "#define"
+     * keyword shall not be included
+     * @param newShader reference to string where new shader source will
+     * be stored
+     */
+    static void addDefine(const char* origShader, const char* defineClause,
+        std::string& newShader);
+
+
 protected:
     /**
      * Creates an uninitialized module.
