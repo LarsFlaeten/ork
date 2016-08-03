@@ -72,7 +72,9 @@
 
 #define CONCATENATE(arg1, arg2) arg1 ## arg2
 #define CONCAT(arg1, arg2) CONCATENATE(arg1, arg2)
-#define static_assert(cond) typedef int CONCAT(ASSERTION_FAILED_AT_LINE_, __LINE__)[(cond) ? 1 : -1]
+// remove below, it creates issues with static_assert which takes two
+// arguments after C++11, and static_assert is not used in any Ork code
+//#define static_assert(cond) typedef int CONCAT(ASSERTION_FAILED_AT_LINE_, __LINE__)[(cond) ? 1 : -1]
 
 #ifndef NDEBUG
 #undef assert
