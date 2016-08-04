@@ -13,4 +13,3 @@ add_executable(${EXENAME} ${SOURCE_FILES})
 #Added whole archive due to the "plug-in usage"
 set(WHOLE_ORK_LIB -Wl,--whole-archive ork -Wl,--no-whole-archive)
 target_link_libraries(${EXENAME} ${WHOLE_ORK_LIB})
-set_property(TARGET ${EXENAME} PROPERTY CXX_STANDARD 11)

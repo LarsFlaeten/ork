@@ -25,7 +25,6 @@ message(STATUS "GLFW libs for " ${LIBTYPE} " library: " ${GLFWLIBS})
 # Create a static library
 add_library(${LIBNAME} ${LIBTYPE} ${SOURCE_FILES})
 target_link_libraries(${LIBNAME} ${LIBS})
-set_property(TARGET ${LIBNAME} PROPERTY CXX_STANDARD 11)
 
 # Adds SO Version and subversion. To be added to ensure ABI/API compatibility.
 #SET_TARGET_PROPERTIES(${LIBNAME} PROPERTIES SOVERSION ${ORK_VERSION_MAJOR} VERSION ${ORK_VERSION})
