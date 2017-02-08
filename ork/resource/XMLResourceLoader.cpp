@@ -44,7 +44,8 @@
 #include <string.h>
 #include <fstream>
 #include <ctime>
-
+#include <stdexcept>
+    
 #ifdef _MSC_VER
 #include <time.h>
 #include <windows.h>
