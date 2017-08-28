@@ -397,7 +397,9 @@ void GlfwWindow::keyCallback(GLFWwindow* window, int key, int scancode, int acti
             gw->keyTyped(c, m,
                 static_cast<int>(xpos),
                 static_cast<int>(ypos));
-        else
+        // There was a bug here, as the condition below also fired on
+        // GLFW_REPEAT (depending on system settings)?
+        else if (action==GLFW_RELEASE)
             gw->keyReleased(c, m,
                 static_cast<int>(xpos),
                 static_cast<int>(ypos));
@@ -410,7 +412,9 @@ void GlfwWindow::keyCallback(GLFWwindow* window, int key, int scancode, int acti
             gw->specialKey(k, m,
                 static_cast<int>(xpos),
                 static_cast<int>(ypos));
-        else
+        // There was a bug here, as the condition below also fired on
+        // GLFW_REPEAT (depending on system settings)?
+        else if(action==GLFW_RELEASE)
             gw->specialKeyReleased(k, m,
                 static_cast<int>(xpos),
                 static_cast<int>(ypos));
