@@ -42,6 +42,7 @@
 #include "ork/render/Module.h"
 
 #include <sstream>
+#include <stdexcept>
 #include <GL/glew.h>
 
 #include "ork/math/mat2.h"
