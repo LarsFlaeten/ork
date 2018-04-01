@@ -299,15 +299,23 @@ quat<type>::quat(const mat3<type> &m)
 }
 
 // operations
-
+// 01.04.2018
+// It seems ORK has flipped the commutative properties
+// when comparing to classical definitions of quat product
+// REF e.g. https://en.wikipedia.org/wiki/Quaternion
+// P * Q actually gives Q * P with the original impl.
 template <typename type>
 quat<type> quat<type>::operator*( const quat &a ) const
 {
-    return quat(a.w * x  + a.x * w  + a.y * z  - a.z * y,
+    return quat(w * a.x  + x * a.w  + y * a.z  - z * a.y,
+                w * a.y  - x * a.z  + y * a.w  + z * a.x,
+                w * a.z  + x * a.y  - y * a.x  + z * a.w,
+                w * a.w  - x * a.x  - y * a.y  - z * a.z);
+/*    return quat(a.w * x  + a.x * w  + a.y * z  - a.z * y,
                 a.w * y  - a.x * z  + a.y * w  + a.z * x,
                 a.w * z  + a.x * y  - a.y * x  + a.z * w,
                 a.w * w  - a.x * x  - a.y * y  - a.z * z);
-}
+*/}
 
 template <typename type>
 quat<type>& quat<type>::operator*=( const quat &a )
