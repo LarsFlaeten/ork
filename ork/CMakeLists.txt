@@ -5,7 +5,7 @@ include_directories("${PROJECT_SOURCE_DIR}" "${PROJECT_SOURCE_DIR}/libraries" "$
 file(GLOB SOURCE_FILES *.cpp */*.cpp)
 
 # Libraries
-set(LIBS GL GLU GLEW glut pthread stb_image tinyxml)
+set(LIBS GL GLU GLEW glut pthread stb_image tinyxml Xinerama Xcursor)
 if(UNIX)
 	set(LIBS ${LIBS} rt)
 endif(UNIX)
