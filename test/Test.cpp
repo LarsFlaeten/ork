@@ -43,7 +43,7 @@
 
 #include "ork/core/FileLogger.h"
 #include "ork/render/FrameBuffer.h"
-#include "ork/ui/GlutWindow.h"
+#include "ork/ui/GlfwWindow.h"
 
 #if defined( _WIN64 ) || defined( _WIN32 )
 #include "process.h"
@@ -93,7 +93,7 @@ void test(bool result, const char *file, int line)
     }
 }
 
-class TestWindow : public GlutWindow
+class TestWindow : public GlfwWindow
 {
 public:
     const char* tests;
@@ -101,7 +101,7 @@ public:
     unsigned int currentTest;
 
     TestWindow(const char *tests, int major = 3, int minor = 3) :
-        GlutWindow(Window::Parameters().name("Test").size(128, 128).version(major, minor, true)),
+        GlfwWindow(Window::Parameters().name("Test").size(128, 128).version(major, minor, true)),
         tests(tests), currentTest(0)
     {
         Logger::INFO_LOGGER = new FileLogger("INFO", new FileLogger::File("testLog.html"), NULL);
@@ -137,13 +137,13 @@ public:
             }
         }
 
-        GlutWindow::redisplay(t, dt);
+        GlfwWindow::redisplay(t, dt);
     }
 
     void reshape(int x, int y)
     {
         FrameBuffer::getDefault()->setViewport(vec4<GLint>(0, 0, x, y));
-        GlutWindow::reshape(x, y);
+        GlfwWindow::reshape(x, y);
         idle(false);
     }
 

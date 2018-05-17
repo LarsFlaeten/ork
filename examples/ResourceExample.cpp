@@ -45,14 +45,14 @@
 #include "ork/resource/XMLResourceLoader.h"
 #include "ork/resource/ResourceManager.h"
 #include "ork/render/FrameBuffer.h"
-#include "ork/ui/GlutWindow.h"
+#include "ork/ui/GlfwWindow.h"
 
 #include "examples/Main.h"
 
 using namespace std;
 using namespace ork;
 
-class ResourceExample : public GlutWindow
+class ResourceExample : public GlfwWindow
 {
 public:
     ptr<ResourceManager> resManager;
@@ -72,7 +72,7 @@ public:
     float dist;
 
     ResourceExample(const string &dir) :
-        GlutWindow(Window::Parameters().size(1024, 768).depth(true)), fov(80.0), alpha(135), theta(45), dist(15)
+        GlfwWindow(Window::Parameters().size(1024, 768).depth(true)), fov(80.0), alpha(135), theta(45), dist(15)
     {
         FileLogger::File *out = new FileLogger::File("log.html");
         Logger::INFO_LOGGER = new FileLogger("INFO", out, Logger::INFO_LOGGER);
@@ -129,7 +129,7 @@ public:
         localToScreen2->setMatrix(cameraToScreen * worldToCamera * mat4f::translate(vec3f(0.0, 0.0, -2.0)) * mat4f::rotatez(180));
         fb->draw(p2, *plane, plane->mode, 0, plane->nvertices, 1, plane->nindices);
 
-        GlutWindow::redisplay(t, dt);
+        GlfwWindow::redisplay(t, dt);
 
         if (Logger::ERROR_LOGGER != NULL) {
             Logger::ERROR_LOGGER->flush();
@@ -140,13 +140,13 @@ public:
     {
         fb->setViewport(vec4<GLint>(0, 0, x, y));
         fb->setDepthTest(true, LESS);
-        GlutWindow::reshape(x, y);
+        GlfwWindow::reshape(x, y);
         idle(false);
     }
 
     void idle(bool damaged)
     {
-        GlutWindow::idle(damaged);
+        GlfwWindow::idle(damaged);
         if (damaged) {
             resManager->updateResources();
         }

@@ -41,13 +41,13 @@
 
 #include "ork/core/Logger.h"
 #include "ork/render/FrameBuffer.h"
-#include "ork/ui/GlutWindow.h"
+#include "ork/ui/GlfwWindow.h"
 
 #include "examples/Main.h"
 
 using namespace ork;
 
-class TessellationExample : public GlutWindow
+class TessellationExample : public GlfwWindow
 {
 public:
     ptr< Mesh<vec3f, unsigned int> > model;
@@ -62,7 +62,7 @@ public:
     float dist;
 
     TessellationExample() :
-        GlutWindow(Window::Parameters().size(1024, 768).version(4,0).depth(true)), fov(80.0), alpha(135), theta(45), dist(5)
+        GlfwWindow(Window::Parameters().size(1024, 768).version(4,0).depth(true)), fov(80.0), alpha(135), theta(45), dist(5)
     {
         model = new Mesh<vec3f, unsigned int>(PATCHES, GPU_STATIC);
         model->setPatchVertices(3);
@@ -227,7 +227,7 @@ public:
         localToScreen->setMatrix(cameraToScreen * worldToCamera * mat4f::rotatez(15));
         fb->draw(p, *model);
 
-        GlutWindow::redisplay(t, dt);
+        GlfwWindow::redisplay(t, dt);
 
         if (Logger::ERROR_LOGGER != NULL) {
             Logger::ERROR_LOGGER->flush();
@@ -238,7 +238,7 @@ public:
     {
         fb->setViewport(vec4<GLint>(0, 0, x, y));
         fb->setDepthTest(true, LESS);
-        GlutWindow::reshape(x, y);
+        GlfwWindow::reshape(x, y);
         idle(false);
     }
 
